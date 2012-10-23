@@ -10,6 +10,7 @@ public class ElectricGaugeSurveillanceMainActivity extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_electric_gauge_surveillance_main);
+        System.out.println("Test");
     }
 
     @Override
