@@ -13,9 +13,4 @@ public class ElectricGaugeSurveillanceMainActivity extends Activity {
         System.out.println("Test");
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.activity_electric_gauge_surveillance_main, menu);
-        return true;
-    }
 }
