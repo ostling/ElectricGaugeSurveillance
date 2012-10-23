@@ -5,12 +5,12 @@ import java.util.Calendar;
 public class SimpleSensorData {
 	
 	int currentPower = 0;
-	Calendar currentTime = Calendar.getInstance();
+	Calendar contactTime = Calendar.getInstance();
 	long numberOfTicks = 0;
 	
-	public SimpleSensorData(int currentPower, Calendar currentTime, long numberOfTicks) {
+	public SimpleSensorData(int currentPower, Calendar contactTime, long numberOfTicks) {
 		this.currentPower = currentPower;
-		this.currentTime = currentTime;
+		this.contactTime = contactTime;
 		this.numberOfTicks = numberOfTicks;
 	}
 	
@@ -22,12 +22,12 @@ public class SimpleSensorData {
 		this.currentPower = currentPower;
 	}
 	
-	public Calendar getCurrentTime() {
-		return currentTime;
+	public Calendar getLastContact() {
+		return contactTime;
 	}
 	
-	public void setCurrentTime(Calendar currentTime) {
-		this.currentTime = currentTime;
+	public void setLastContact(Calendar currentTime) {
+		this.contactTime = currentTime;
 	}
 	
 	public long getNumberOfTicks() {

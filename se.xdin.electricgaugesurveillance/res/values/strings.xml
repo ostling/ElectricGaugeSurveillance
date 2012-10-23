@@ -5,7 +5,9 @@
     <string name="menu_settings">Settings</string>
     <string name="title_activity_electric_gauge_surveillance_main">ElectricGaugeSurveillanceMainActivity</string>
     <string name="simple_statistics">Simple statistics</string>
-    <string name="current_power_label">Current power consumption</string>
+    <string name="simple_current_power_label">Current power consumption</string>
     <string name="default_number_of_ticks">1000</string>
+    <string name="simple_last_contact">Last contact</string>
+    <string name="simple_totalt_energy">Energy used since</string>
 
 </resources>
