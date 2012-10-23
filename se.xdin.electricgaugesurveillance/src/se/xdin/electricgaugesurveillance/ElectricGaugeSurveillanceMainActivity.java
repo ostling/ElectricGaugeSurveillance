@@ -13,4 +13,5 @@ public class ElectricGaugeSurveillanceMainActivity extends Activity {
         System.out.println("Test");
     }
 
+    
 }
