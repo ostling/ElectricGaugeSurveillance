@@ -1,8 +1,9 @@
 <resources>
 
-    <string name="app_name">ElectricGaugeSurveillance</string>
+    <string name="app_name">Electric Gauge Surveillance</string>
     <string name="hello_world">Hello world!</string>
     <string name="menu_settings">Settings</string>
     <string name="title_activity_electric_gauge_surveillance_main">ElectricGaugeSurveillanceMainActivity</string>
+    <string name="simple_statistics">Simple statistics</string>
 
 </resources>
