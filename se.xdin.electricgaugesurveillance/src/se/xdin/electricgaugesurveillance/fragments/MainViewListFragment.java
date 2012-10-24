@@ -1,10 +1,13 @@
 package se.xdin.electricgaugesurveillance.fragments;
 
+import se.xdin.electricgaugesurveillance.SimpleStatisticsActivity;
 import android.app.ListFragment;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.TextView;
 
 public class MainViewListFragment extends ListFragment {
 	
@@ -27,6 +30,14 @@ public class MainViewListFragment extends ListFragment {
 	
 	@Override
 	public void onListItemClick(ListView l, View v, int position, long id) {
-		// TODO Auto-generated method stub
+		System.out.println("props listview: " + l + ", view: " + v + ", pos: " + position + ", id: " + id);
+		TextView textView = (TextView) v;
+		if (textView.getText().equals("Simple statistics")) {
+			Intent intent = new Intent(getActivity().getApplicationContext(),
+					SimpleStatisticsActivity.class);
+			startActivity(intent);
+		} else {
+			System.out.println("no match: " + textView.getText());
+		}
 	}
 }
