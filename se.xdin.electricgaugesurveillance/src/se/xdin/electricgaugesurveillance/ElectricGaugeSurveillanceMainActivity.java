@@ -12,6 +12,7 @@ public class ElectricGaugeSurveillanceMainActivity extends Activity {
         setContentView(R.layout.activity_electric_gauge_surveillance_main);
         System.out.println("Test");        
         System.out.println("Test3");
+        System.out.println("Test4");
     }
 
     
