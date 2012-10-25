@@ -70,14 +70,14 @@ public class SensorDataHelper {
 	 */
 	private static SimpleSensorData handleReadLine(String sensorData) {
 		String[] pieces = sensorData.split(",");
-		String date = pieces[0];
-		String time = pieces[1];
-		double power = Double.parseDouble(pieces[2]);
-		long ticks = Integer.parseInt(pieces[3]);
+		String year = pieces[0], month = pieces[1], day = pieces[2];
+		String hour = pieces[3], minute = pieces[4], second = pieces[5];
+		double power = Double.parseDouble(pieces[6]);
+		long ticks = Integer.parseInt(pieces[7]);
 		Calendar dateTime = Calendar.getInstance();
-		dateTime.set(Integer.parseInt(date.substring(0, 4)), Integer.parseInt(date.substring(4, 6))-1,
-				Integer.parseInt(date.substring(6, 8)), Integer.parseInt(time.substring(0, 2)),
-				Integer.parseInt(time.substring(2, 4)), Integer.parseInt(time.substring(4, 6)));
+		dateTime.set(Integer.parseInt(year), Integer.parseInt(month)-1,
+				Integer.parseInt(day), Integer.parseInt(hour),
+				Integer.parseInt(minute), Integer.parseInt(second));
 		
 		return new SimpleSensorData(dateTime, power, ticks);
 	}
