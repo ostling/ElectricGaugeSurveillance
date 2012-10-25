@@ -79,7 +79,6 @@ public class SimpleStatisticsFragment extends ListFragment {
 									Integer.parseInt(getString(R.string.default_number_of_ticks))))) + " kWH"));
 			list.add(putData(getString(R.string.simple_last_contact),
 					sensorData.getLastContact().getTime().toString())); // TODO: fix with SimpleDateFormat
-			System.out.println("date set for list: " + sensorData.getLastContact().getTime().toString() + "lsit: " + list);
 		}
 		return list;
 	}

@@ -18,47 +18,38 @@ public class SensorDataHelper {
 
 	
 	public static SimpleSensorData getSimpleSensorData(final String ipAdress, final int port) {
-//		new Thread(new Runnable() {
-//			public void run() {
-			    try {
-			    	System.out.println("starting socket");
-		            Socket s = new Socket(ipAdress, port);
-		            System.out.println("socket up");
-		           
-		            //outgoing stream redirect to socket
-		            OutputStream out = s.getOutputStream();
-		           
-		            out.write(SIMPLE_SENSOR_DATA);
-		            
-		            //Wait for data
-		            try{ Thread.sleep(150); }catch(InterruptedException e){ }
-		            
-		            BufferedReader input = new BufferedReader(new InputStreamReader(s.getInputStream()));
-		            
-		            //read line(s)
-		            string = input.readLine();
-		            System.out.println("read: " + string);
-		            //Close connection
-		            s.close();
-		           
-		           
-		    } catch (UnknownHostException e) {
-		            // TODO Auto-generated catch block
-		            e.printStackTrace();
-		    } catch (IOException e) {
-		            // TODO Auto-generated catch block
-		            e.printStackTrace();
-		    }
+	    try {
+            Socket s = new Socket(ipAdress, port);
+           
+            //outgoing stream redirect to socket
+            OutputStream out = s.getOutputStream();
+           
+            out.write(SIMPLE_SENSOR_DATA);
+            
+            //Wait for data
+            try{ Thread.sleep(150); }catch(InterruptedException e){ }
+            
+            BufferedReader input = new BufferedReader(new InputStreamReader(s.getInputStream()));
+            
+            //read line(s)
+            string = input.readLine();
+            //Close connection
+            s.close();
+       
+	    } catch (UnknownHostException e) {
+	            // TODO Auto-generated catch block
+	            e.printStackTrace();
+	    } catch (IOException e) {
+	            // TODO Auto-generated catch block
+	            e.printStackTrace();
+	    }
 
-//		}}).start();
-		 if (string != null) {
-			 return handleReadLine(string);
-		 } else {
-			 System.out.println("return null");
-			 return null;
-		 }
-		// Just use as test:
-//        return new SimpleSensorData(4, Calendar.getInstance(), 210000);
+		if (string != null) {
+			return handleReadLine(string);
+		} else {
+			System.out.println("return null");
+			return null;
+		}
 	}
 	
 	
