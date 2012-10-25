@@ -8,7 +8,7 @@
     <string name="simple_current_power_label">Current power consumption</string>
     <string name="default_number_of_ticks">1000</string>
     <string name="simple_last_contact">Last contact</string>
-    <string name="simple_totalt_energy">Energy used since</string>
+    <string name="simple_totalt_energy">Energy used since start</string>
     <string name="SENSOR_PREFS">SensorPreferences</string>
     <string name="SENSOR_PREFS_NUMBER_OF_TICKS">SensorPrefsNumberOfTicks</string>
     <string name="SENSOR_PREFS_IP_ADRESS">SensorPrefsIpAdress</string>

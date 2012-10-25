@@ -12,12 +12,15 @@ import se.xdin.electricgaugesurveillance.util.SensorDataHelper;
 import android.app.ListFragment;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.View;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 
 public class SimpleStatisticsFragment extends ListFragment {
 	SharedPreferences sensorSettings = null;
+	private Handler handler = new Handler();
+	ArrayList<Map<String, String>> list;
 	
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
@@ -26,19 +29,40 @@ public class SimpleStatisticsFragment extends ListFragment {
 		// Fetch preferences
 		sensorSettings = getActivity().getSharedPreferences(getString(R.string.SENSOR_PREFS), 0);
 		
-		// Create list
-		ArrayList<Map<String, String>> list = getData();
-		String[] from = { "name", "value" };
-		int[] to = {android.R.id.text1, android.R.id.text2 };
-		SimpleAdapter adapter = new SimpleAdapter(getActivity(), list,
+		// TEMPORARY: Set ip and port
+		sensorSettings.edit().putString(getString(R.string.SENSOR_PREFS_IP_ADRESS), "10.10.100.55").commit();
+		sensorSettings.edit().putInt(getString(R.string.SENSOR_PREFS_PORT), 4444).commit();
+		
+		
+		new Thread(new Runnable() {
+			public void run() {
+			// Create list
+			list = getData();
+			String[] from = { "name", "value" };
+			int[] to = {android.R.id.text1, android.R.id.text2 };
+			final SimpleAdapter adapter = new SimpleAdapter(getActivity(), list,
 				android.R.layout.simple_list_item_2, from, to);
-		setListAdapter(adapter);
+			handler.post(new Runnable() {
+				public void run() {
+					setListAdapter(adapter);
+				};
+			});
+			}
+		}).start();
 	}
 	
 	@Override
 	public void onListItemClick(ListView l, View v, int position, long id) {
 		super.onListItemClick(l, v, position, id);
+		new Thread(new Runnable() {
+			public void run() {
+				list = getData();
+				System.out.println("new data added");
+			}
+		}).start();
 	}
+	
+	
 	
 	private ArrayList<Map<String, String>> getData() {
 		String ipAdress = sensorSettings.getString(getString(R.string.SENSOR_PREFS_IP_ADRESS), null); // TODO : Handle null
@@ -46,14 +70,16 @@ public class SimpleStatisticsFragment extends ListFragment {
 		SimpleSensorData sensorData = SensorDataHelper.getSimpleSensorData(ipAdress, port);
 		
 		ArrayList<Map<String, String>> list = new ArrayList<Map<String, String>>();
-		list.add(putData(getString(R.string.simple_current_power_label), 
-				Integer.toString(sensorData.getCurrentPower()) + " kW")); // (label, value)
-		list.add(putData(getString(R.string.simple_totalt_energy), 
-				Integer.toString((int)EnergyHelper.calculateKWH(sensorData.getNumberOfTicks(),
-						sensorSettings.getInt(getString(R.string.SENSOR_PREFS_NUMBER_OF_TICKS),
-								Integer.parseInt(getString(R.string.default_number_of_ticks))))) + " kWH"));
-		list.add(putData(getString(R.string.simple_last_contact),
-				sensorData.getLastContact().getTime().toString())); // TODO: fix with SimpleDateFormat
+		if (sensorData != null) {
+			list.add(putData(getString(R.string.simple_current_power_label), 
+					Double.toString(sensorData.getCurrentPower()) + " kW")); // (label, value)
+			list.add(putData(getString(R.string.simple_totalt_energy), 
+					Integer.toString((int)EnergyHelper.calculateKWH(sensorData.getNumberOfTicks(),
+							sensorSettings.getInt(getString(R.string.SENSOR_PREFS_NUMBER_OF_TICKS),
+									Integer.parseInt(getString(R.string.default_number_of_ticks))))) + " kWH"));
+			list.add(putData(getString(R.string.simple_last_contact),
+					sensorData.getLastContact().getTime().toString())); // TODO: fix with SimpleDateFormat
+		}
 		return list;
 	}
 	

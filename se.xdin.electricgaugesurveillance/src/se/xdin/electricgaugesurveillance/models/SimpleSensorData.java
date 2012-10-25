@@ -4,21 +4,21 @@ import java.util.Calendar;
 
 public class SimpleSensorData {
 	
-	int currentPower = 0;
+	double currentPower = 0;
 	Calendar contactTime = Calendar.getInstance();
 	long numberOfTicks = 0;
 	
-	public SimpleSensorData(int currentPower, Calendar contactTime, long numberOfTicks) {
+	public SimpleSensorData(Calendar contactTime, double currentPower, long numberOfTicks) {
 		this.currentPower = currentPower;
 		this.contactTime = contactTime;
 		this.numberOfTicks = numberOfTicks;
 	}
 	
-	public int getCurrentPower() {
+	public double getCurrentPower() {
 		return currentPower;
 	}
 	
-	public void setCurrentPower(int currentPower) {
+	public void setCurrentPower(double currentPower) {
 		this.currentPower = currentPower;
 	}
 	
