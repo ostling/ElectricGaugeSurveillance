@@ -14,5 +14,6 @@
     <string name="SENSOR_PREFS_IP_ADRESS">SensorPrefsIpAdress</string>
     <string name="SENSOR_PREFS_PORT">SensorPrefsPort</string>
     <string name="title_activity_simple_statistics">Simple statistics</string>
+    <string name="title_activity_simple_statistics_graph">Detailed view</string>
 
 </resources>

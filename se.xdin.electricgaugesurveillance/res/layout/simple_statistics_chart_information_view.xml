@@ -3,11 +3,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical" >
-
-    <fragment
-        android:id="@+id/simpleStatisticsFragment"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        class="se.xdin.electricgaugesurveillance.fragments.SimpleStatisticsFragment" />
+    
 
 </LinearLayout>

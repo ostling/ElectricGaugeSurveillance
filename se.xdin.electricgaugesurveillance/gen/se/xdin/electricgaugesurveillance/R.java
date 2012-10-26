@@ -17,12 +17,17 @@ public final class R {
     public static final class id {
         public static final int detailFragment=0x7f070000;
         public static final int mainViewListFragment=0x7f070001;
-        public static final int menu_settings=0x7f070003;
+        public static final int menu_settings=0x7f070006;
+        public static final int powerChartLayout=0x7f070003;
         public static final int simpleStatisticsFragment=0x7f070002;
+        public static final int simpleStatisticsGraphInformationFragment=0x7f070004;
+        public static final int textView1=0x7f070005;
     }
     public static final class layout {
         public static final int activity_electric_gauge_surveillance_main=0x7f030000;
         public static final int simple_statistics=0x7f030001;
+        public static final int simple_statistics_chart=0x7f030002;
+        public static final int simple_statistics_chart_information_view=0x7f030003;
     }
     public static final class menu {
         public static final int activity_electric_gauge_surveillance_main=0x7f060000;
@@ -42,6 +47,7 @@ public final class R {
         public static final int simple_totalt_energy=0x7f040008;
         public static final int title_activity_electric_gauge_surveillance_main=0x7f040003;
         public static final int title_activity_simple_statistics=0x7f04000d;
+        public static final int title_activity_simple_statistics_graph=0x7f04000e;
     }
     public static final class style {
         public static final int AppTheme=0x7f050000;

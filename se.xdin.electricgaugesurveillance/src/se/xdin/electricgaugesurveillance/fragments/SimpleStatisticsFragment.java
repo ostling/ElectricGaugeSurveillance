@@ -5,17 +5,20 @@ import java.util.HashMap;
 import java.util.Map;
 
 import se.xdin.electricgaugesurveillance.R;
+import se.xdin.electricgaugesurveillance.SimpleStatisticsGraphActivity;
 import se.xdin.electricgaugesurveillance.models.SimpleSensorData;
 import se.xdin.electricgaugesurveillance.util.EnergyHelper;
 import se.xdin.electricgaugesurveillance.util.SensorDataHelper;
 
 import android.app.ListFragment;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
+import android.widget.TwoLineListItem;
 
 public class SimpleStatisticsFragment extends ListFragment {
 	SharedPreferences sensorSettings = null;
@@ -31,7 +34,7 @@ public class SimpleStatisticsFragment extends ListFragment {
 		sensorSettings = getActivity().getSharedPreferences(getString(R.string.SENSOR_PREFS), 0);
 		
 		// TEMPORARY: Set ip and port
-		sensorSettings.edit().putString(getString(R.string.SENSOR_PREFS_IP_ADRESS), "10.10.100.55").commit();
+		sensorSettings.edit().putString(getString(R.string.SENSOR_PREFS_IP_ADRESS), "10.10.100.43").commit();
 		sensorSettings.edit().putInt(getString(R.string.SENSOR_PREFS_PORT), 4444).commit();
 		
 		installAdapter();
@@ -60,10 +63,13 @@ public class SimpleStatisticsFragment extends ListFragment {
 	public void onListItemClick(ListView l, View v, int position, long id) {
 		super.onListItemClick(l, v, position, id);
 		installAdapter();
+		TwoLineListItem tlli = (TwoLineListItem) v;
+		if (tlli.getText1().getText().toString().equals(getString(R.string.simple_current_power_label))) {
+			Intent intent = new Intent(getActivity().getApplicationContext(), SimpleStatisticsGraphActivity.class);
+			startActivity(intent);
+		}
 	}
-	
-	
-	
+
 	private ArrayList<Map<String, String>> getData() {
 		String ipAdress = sensorSettings.getString(getString(R.string.SENSOR_PREFS_IP_ADRESS), null); // TODO : Handle null
 		int port = sensorSettings.getInt(getString(R.string.SENSOR_PREFS_PORT), 4444); // TODO : Handle default port
