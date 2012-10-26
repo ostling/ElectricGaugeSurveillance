@@ -50,6 +50,14 @@ public LiveTimeSeries(String title) {
       updateRange(x, y);
     }
   }
+  
+  public void setMaxPoints(int maxPoints) {
+	  this.maxPoints = maxPoints;
+  }
+  
+  public int getMaxPoints() {
+	  return this.maxPoints;
+  }
 
   /**
    * Updates the range on both axes.

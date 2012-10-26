@@ -15,7 +15,7 @@ public class SimpleStatisticsGraphActivity extends Activity {
 		setContentView(R.layout.simple_statistics_chart);
 		
 		PowerConsumptionLineChart powerView = new PowerConsumptionLineChart();
-		View chartView = powerView.getChartView(this);
+		View chartView = powerView.getChartView(this, 200); // TODO: Fetch maxpoints from settings
 		chartView.setLayoutParams(new LinearLayout.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT, 1f));
 		LinearLayout layout = (LinearLayout) findViewById(R.id.powerChartLayout);
 		
