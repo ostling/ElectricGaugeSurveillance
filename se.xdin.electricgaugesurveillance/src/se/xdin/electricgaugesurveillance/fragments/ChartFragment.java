@@ -23,8 +23,10 @@ import android.app.Fragment;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.graphics.Color;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -57,26 +59,24 @@ public class ChartFragment extends Fragment implements OnClickListener {
 	private SharedPreferences sensorSettings = null;
 	private String ipAdress;
 	private int port;
+	
+	private Handler handler = new Handler();
 
 
-	private final CountDownTimer mTimer = new CountDownTimer(15 * 60 * 1000, 5000) {
+	private final CountDownTimer mTimer = new CountDownTimer(15 * 60 * 1000, 1000) {
 		@Override
 		public void onTick(final long millisUntilFinished) {
-			new Thread(new Runnable() {
-				
-				public void run() {
-					addValue();
-				}
-			}).start();
+			new GetSensorData().execute("");
 		}
 
 		@Override
 		public void onFinish() {}
 	};
+	
 
 	private final ZoomListener mZoomListener = new ZoomListener() {
 		public void zoomReset() {
-			mZoomLevel = 1;
+			mZoomLevel = 0.1;
 			scrollGraph(new Date().getTime());
 		}
 
@@ -100,8 +100,6 @@ public class ChartFragment extends Fragment implements OnClickListener {
 		
 		ipAdress = sensorSettings.getString(getString(R.string.SENSOR_PREFS_IP_ADRESS), null); // TODO : Handle null
 		port = sensorSettings.getInt(getString(R.string.SENSOR_PREFS_PORT), 4444); // TODO : Handle default port
-		
-		System.out.println("ip: " + ipAdress + ", port: " + port);
 		
 		mDataset = new XYMultipleSeriesDataset();
 		mRenderer = new XYMultipleSeriesRenderer();
@@ -127,7 +125,7 @@ public class ChartFragment extends Fragment implements OnClickListener {
 	}
 
 	private TimeSeries createSeries() {
-		TimeSeries ts = new TimeSeries("Random");
+		TimeSeries ts = new TimeSeries("Power (kW)");
 		return ts;
 	}
 
@@ -139,7 +137,7 @@ public class ChartFragment extends Fragment implements OnClickListener {
 		}
 
 		final LinearLayout view = (LinearLayout) inflater.inflate(R.layout.simple_chart_fragment, container, false);
-		mChartView = ChartFactory.getTimeChartView(getActivity(), mDataset, mRenderer, TIME);
+		mChartView = ChartFactory.getTimeChartView(getActivity(), mDataset, mRenderer, "Power consumption");
 		mChartView.addZoomListener(mZoomListener, true, false);
 		view.addView(mChartView, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 		return view;
@@ -160,7 +158,10 @@ public class ChartFragment extends Fragment implements OnClickListener {
 		mDataset.addSeries(series);
 		
 		renderer = new XYSeriesRenderer();
+		
 		renderer.setColor(Color.RED);
+		renderer.setPointStyle(PointStyle.CIRCLE);
+		
 		mRenderer.addSeriesRenderer(renderer);
 
 		mTimer.start();
@@ -174,16 +175,7 @@ public class ChartFragment extends Fragment implements OnClickListener {
 		}
 	}
 
-
-	private double randomValue() {
-		final int value = Math.abs(RAND.nextInt(32));
-		final double percent = (value * 100) / 31.0;
-		return ((int) (percent * 10)) / 10.0;
-	}
-
-	private void addValue() {
-		SimpleSensorData sensorData = SensorDataHelper.getSimpleSensorData(ipAdress, port);
-		final double value = sensorData.getCurrentPower();
+	private void addValue(double value) {
 		if (mYAxisMin > value) mYAxisMin = value;
 		if (mYAxisMax < value) mYAxisMax = value;
 
@@ -203,7 +195,6 @@ public class ChartFragment extends Fragment implements OnClickListener {
 	}
 
 	public void onClick(final View v) {
-		System.out.println("ON CLICK");
 		switch (v.getId()) {
 		case R.id.zoom_in:
 			mChartView.zoomIn();
@@ -219,6 +210,25 @@ public class ChartFragment extends Fragment implements OnClickListener {
 
 		default:
 			break;
+		}
+
+	}
+	
+	private class GetSensorData extends AsyncTask<String, Void, Double> {
+
+		@Override
+		protected Double doInBackground(String... params) {
+			System.out.println("Fetching data, ip: " + ipAdress + ", port: " + port);
+			SimpleSensorData sensorData = SensorDataHelper.getSimpleSensorData(ipAdress, port);
+			System.out.println("Data fetched from sensor");
+			if (sensorData != null)
+				return sensorData.getCurrentPower();
+			return 0.0;
+		}
+		
+		@Override
+		protected void onPostExecute(Double result) {
+			addValue(result);
 		}
 
 	}
