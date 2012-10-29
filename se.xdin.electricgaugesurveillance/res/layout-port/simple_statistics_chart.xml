@@ -1,16 +1,42 @@
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-  xmlns:android="http://schemas.android.com/apk/res/android"
-  android:orientation="vertical"
-  android:id="@+id/powerChartLayout"
-  android:layout_width="match_parent"
-  android:layout_height="match_parent">
-<!--   Graph on top, place your other views here -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical" >
 
-    <fragment
-        android:id="@+id/simpleStatisticsGraphInformationFragment"
-        android:layout_width="wrap_content"
-        android:layout_height="95dp"
-        class="se.xdin.electricgaugesurveillance.fragments.SimpleStatisticsGraphInformationFragment" />
+    <LinearLayout
+        android:id="@+id/chart"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal" 
+        android:gravity="center">
+
+        <ImageButton
+            android:id="@+id/zoom_in"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onClick"
+            android:src="@drawable/ic_action_zoom_in" />
+        
+        <ImageButton
+            android:id="@+id/zoom_reset"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onClick"
+            android:src="@drawable/ic_action_zoom_reset" />
+        
+        <ImageButton
+            android:id="@+id/zoom_out"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onClick"
+            android:src="@drawable/ic_action_zoom_out" />
+
+    </LinearLayout>
 
 </LinearLayout>
