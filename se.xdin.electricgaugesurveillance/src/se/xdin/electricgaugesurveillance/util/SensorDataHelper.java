@@ -15,26 +15,60 @@ public class SensorDataHelper {
 	public final static int SIMPLE_SENSOR_DATA = 10;
 	
 	static String string = null;
-
 	
-	public static SimpleSensorData getSimpleSensorData(final String ipAdress, final int port) {
+	public static Socket openSocket(final String ipAdress, final int port) {
+		Socket s = null;
+		System.out.println("previous instances of socket: " + Socket.class);
+		try {
+			s = new Socket(ipAdress, port);
+		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (Exception e) {
+			System.out.println("unknown exception");
+		}
+		
+		return s;
+	}
+	
+	public static void closeSocket(Socket s) {
+		try {
+			if (s != null)
+				s.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	public static SimpleSensorData getSimpleSensorData(Socket s) {
 	    try {
-            Socket s = new Socket(ipAdress, port);
+//            Socket s = new Socket(ipAdress, port);
            
             //outgoing stream redirect to socket
+	    	BufferedReader input = new BufferedReader(new InputStreamReader(s.getInputStream()));
             OutputStream out = s.getOutputStream();
-           
+           System.out.println("writing");
             out.write(SIMPLE_SENSOR_DATA);
             
-            //Wait for data
-            try{ Thread.sleep(150); }catch(InterruptedException e){ }
-            
-            BufferedReader input = new BufferedReader(new InputStreamReader(s.getInputStream()));
-            
             //read line(s)
+            System.out.println("wait to ready");
+//            int retrys = 0;
+//            while (!input.ready()) {
+//            	retrys++;
+//            	if (retrys > 3)
+//            		return null;
+            	try{ Thread.sleep(150); } catch(InterruptedException e){}
+            	
+//            }
+            System.out.println("ready to read");
             string = input.readLine();
+            System.out.println("reading done: " + string);
             //Close connection
-            s.close();
+//            s.close();
        
 	    } catch (UnknownHostException e) {
 	            // TODO Auto-generated catch block
@@ -42,8 +76,10 @@ public class SensorDataHelper {
 	    } catch (IOException e) {
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();
+	    } catch (Exception e) {
+	    	System.out.println("UNHANDLED EXCEPTION SENSORDATAHELPER");
 	    }
-
+	    
 		if (string != null)
 			if (!string.equals(""))
 				return handleReadLine(string);

@@ -1,6 +1,8 @@
 package se.xdin.electricgaugesurveillance.fragments;
 
+import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Random;
@@ -26,12 +28,12 @@ import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.CountDownTimer;
-import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 import android.widget.LinearLayout.LayoutParams;
 
 public class ChartFragment extends Fragment implements OnClickListener {
@@ -60,7 +62,7 @@ public class ChartFragment extends Fragment implements OnClickListener {
 	private String ipAdress;
 	private int port;
 	
-	private Handler handler = new Handler();
+	private Socket socket;
 
 
 	private final CountDownTimer mTimer = new CountDownTimer(15 * 60 * 1000, 1000) {
@@ -90,9 +92,32 @@ public class ChartFragment extends Fragment implements OnClickListener {
 			scrollGraph(new Date().getTime());
 		}
 	};
+	
+	private void openConnection() {
+		new Thread(new Runnable() {
+			public void run() {
+				if (socket != null) {
+					SensorDataHelper.closeSocket(socket);
+					socket = null;
+				}
+				socket = SensorDataHelper.openSocket(ipAdress, port);
+			}
+		}).start();
+		Calendar cal = Calendar.getInstance();
+		cal.add(Calendar.MILLISECOND, 20000); // Set time out
+		
+		while (socket == null || Calendar.getInstance().after(cal)) {
+			try { Thread.sleep(1000); } catch (Exception e) {}
+		}
+		if (Calendar.getInstance().after(cal)) {
+			System.out.println("time out");
+			Toast.makeText(getActivity(), "TIME OUT", Toast.LENGTH_SHORT);
+		}
+	}
 
 	@Override
 	public void onCreate(final Bundle savedInstanceState) {
+		System.out.println("craete");
 		super.onCreate(savedInstanceState);
 		
 		// Fetch preferences
@@ -100,6 +125,8 @@ public class ChartFragment extends Fragment implements OnClickListener {
 		
 		ipAdress = sensorSettings.getString(getString(R.string.SENSOR_PREFS_IP_ADRESS), null); // TODO : Handle null
 		port = sensorSettings.getInt(getString(R.string.SENSOR_PREFS_PORT), 4444); // TODO : Handle default port
+		
+		openConnection();
 		
 		mDataset = new XYMultipleSeriesDataset();
 		mRenderer = new XYMultipleSeriesRenderer();
@@ -131,6 +158,7 @@ public class ChartFragment extends Fragment implements OnClickListener {
 
 	@Override
 	public View onCreateView(final LayoutInflater inflater, final ViewGroup container, final Bundle savedInstanceState) {
+		System.out.println("view");
 		if (Configuration.ORIENTATION_PORTRAIT == getResources().getConfiguration().orientation) {
 			mYAxisPadding = 9;
 			mRenderer.setYLabels(15);
@@ -146,6 +174,7 @@ public class ChartFragment extends Fragment implements OnClickListener {
 
 	@Override
 	public void onActivityCreated(final Bundle savedInstanceState) {
+		System.out.println("act");
 		super.onActivityCreated(savedInstanceState);
 		mViewZoomIn = getActivity().findViewById(R.id.zoom_in);
 		mViewZoomOut = getActivity().findViewById(R.id.zoom_out);
@@ -163,7 +192,7 @@ public class ChartFragment extends Fragment implements OnClickListener {
 		renderer.setPointStyle(PointStyle.CIRCLE);
 		
 		mRenderer.addSeriesRenderer(renderer);
-
+		addValue(0.0);
 		mTimer.start();
 	}
 
@@ -173,6 +202,7 @@ public class ChartFragment extends Fragment implements OnClickListener {
 		if (null != mTimer) {
 			mTimer.cancel();
 		}
+		SensorDataHelper.closeSocket(socket);
 	}
 
 	private void addValue(double value) {
@@ -219,10 +249,16 @@ public class ChartFragment extends Fragment implements OnClickListener {
 		@Override
 		protected Double doInBackground(String... params) {
 			System.out.println("Fetching data, ip: " + ipAdress + ", port: " + port);
-			SimpleSensorData sensorData = SensorDataHelper.getSimpleSensorData(ipAdress, port);
-			System.out.println("Data fetched from sensor");
-			if (sensorData != null)
-				return sensorData.getCurrentPower();
+			if (!socket.isConnected())
+				openConnection();
+			if (socket.isConnected()) {
+				SimpleSensorData sensorData = SensorDataHelper.getSimpleSensorData(socket);
+				
+				if (sensorData != null) {
+					System.out.println("Data fetched from sensor " + sensorData.getCurrentPower());
+					return sensorData.getCurrentPower();
+				}
+			}
 			return 0.0;
 		}
 		

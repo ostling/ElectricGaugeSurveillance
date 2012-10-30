@@ -39,6 +39,7 @@ public final class R {
     public static final class string {
         public static final int SENSOR_PREFS=0x7f040009;
         public static final int SENSOR_PREFS_IP_ADRESS=0x7f04000b;
+        public static final int SENSOR_PREFS_MAX_RETRYS=0x7f04000f;
         public static final int SENSOR_PREFS_NUMBER_OF_TICKS=0x7f04000a;
         public static final int SENSOR_PREFS_PORT=0x7f04000c;
         public static final int app_name=0x7f040000;

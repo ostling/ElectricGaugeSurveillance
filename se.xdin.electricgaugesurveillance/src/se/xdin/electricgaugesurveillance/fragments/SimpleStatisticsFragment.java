@@ -1,6 +1,8 @@
 package se.xdin.electricgaugesurveillance.fragments;
 
+import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -18,6 +20,7 @@ import android.os.Handler;
 import android.view.View;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
+import android.widget.Toast;
 import android.widget.TwoLineListItem;
 
 public class SimpleStatisticsFragment extends ListFragment {
@@ -25,6 +28,12 @@ public class SimpleStatisticsFragment extends ListFragment {
 	private Handler handler = new Handler();
 	private SimpleAdapter adapter;
 	ArrayList<Map<String, String>> list;
+	Thread thread;
+	private int MAX_RETRYS;
+	private String ipAdress;
+	private int port;
+	
+	Socket socket = null;
 	
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
@@ -34,10 +43,42 @@ public class SimpleStatisticsFragment extends ListFragment {
 		sensorSettings = getActivity().getSharedPreferences(getString(R.string.SENSOR_PREFS), 0);
 		
 		// TEMPORARY: Set ip and port
-		sensorSettings.edit().putString(getString(R.string.SENSOR_PREFS_IP_ADRESS), "10.10.100.35").commit();
+		sensorSettings.edit().putString(getString(R.string.SENSOR_PREFS_IP_ADRESS), "10.10.100.31").commit();
 		sensorSettings.edit().putInt(getString(R.string.SENSOR_PREFS_PORT), 4444).commit();
+		sensorSettings.edit().putInt(getString(R.string.SENSOR_PREFS_MAX_RETRYS), 3);
 		
-		installAdapter();
+		ipAdress = sensorSettings.getString(getString(R.string.SENSOR_PREFS_IP_ADRESS), null); // TODO : Handle null
+		port = sensorSettings.getInt(getString(R.string.SENSOR_PREFS_PORT), 4444); // TODO : Handle default port
+		MAX_RETRYS = sensorSettings.getInt(getString(R.string.SENSOR_PREFS_MAX_RETRYS), 3);
+		
+		System.out.println("opening socket, ip:" + ipAdress + ", port: " + port + " socket " + socket);
+		
+		new Thread(new Runnable() {
+			
+			public void run() {
+				if (socket != null) {
+					SensorDataHelper.closeSocket(socket);
+					socket = null;
+				}
+				socket = SensorDataHelper.openSocket(ipAdress, port);
+				System.out.println("socket öppnad");
+			}
+		}).start();
+		
+		Calendar cal = Calendar.getInstance();
+		cal.add(Calendar.MILLISECOND, 20000); // Set time out
+		
+		while (socket == null && Calendar.getInstance().before(cal)) {
+			try { Thread.sleep(1000); } catch (Exception e) {}
+		}
+		
+		if (Calendar.getInstance().after(cal)) {
+			System.out.println("timeout");
+			Toast.makeText(getActivity(), "TIME OUT", Toast.LENGTH_SHORT);
+		} else {
+			System.out.println("socket open, socket: " + socket);
+			installAdapter();
+		}
 	}
 	
 	private void installAdapter() {
@@ -62,31 +103,46 @@ public class SimpleStatisticsFragment extends ListFragment {
 	@Override
 	public void onListItemClick(ListView l, View v, int position, long id) {
 		super.onListItemClick(l, v, position, id);
-		installAdapter();
 		TwoLineListItem tlli = (TwoLineListItem) v;
 		if (tlli.getText1().getText().toString().equals(getString(R.string.simple_current_power_label))) {
 			Intent intent = new Intent(getActivity().getApplicationContext(), SimpleStatisticsGraphActivity.class);
 			startActivity(intent);
 		}
 	}
+	
+	@Override
+	public void onStop() {
+		super.onStop();
+		new Thread(new Runnable() {
+			public void run() {
+				SensorDataHelper.closeSocket(socket);
+			}
+		}).start();
+	}
 
 	private ArrayList<Map<String, String>> getData() {
-		String ipAdress = sensorSettings.getString(getString(R.string.SENSOR_PREFS_IP_ADRESS), null); // TODO : Handle null
-		int port = sensorSettings.getInt(getString(R.string.SENSOR_PREFS_PORT), 4444); // TODO : Handle default port
-		SimpleSensorData sensorData = SensorDataHelper.getSimpleSensorData(ipAdress, port);
-		
-		ArrayList<Map<String, String>> list = new ArrayList<Map<String, String>>();
-		if (sensorData != null) {
-			list.add(putData(getString(R.string.simple_current_power_label), 
-					Double.toString(sensorData.getCurrentPower()) + " kW")); // (label, value)
-			list.add(putData(getString(R.string.simple_totalt_energy), 
-					Integer.toString((int)EnergyHelper.calculateKWH(sensorData.getNumberOfTicks(),
-							sensorSettings.getInt(getString(R.string.SENSOR_PREFS_NUMBER_OF_TICKS),
-									Integer.parseInt(getString(R.string.default_number_of_ticks))))) + " kWH"));
-			list.add(putData(getString(R.string.simple_last_contact),
-					sensorData.getLastContact().getTime().toString())); // TODO: fix with SimpleDateFormat
+		if (socket.isConnected()) {
+			SimpleSensorData sensorData = SensorDataHelper.getSimpleSensorData(socket);
+			if (sensorData == null) {
+				SensorDataHelper.closeSocket(socket);
+				socket = SensorDataHelper.openSocket(ipAdress, port);
+				sensorData = SensorDataHelper.getSimpleSensorData(socket);
+			}
+			
+			ArrayList<Map<String, String>> list = new ArrayList<Map<String, String>>();
+			if (sensorData != null) {
+				list.add(putData(getString(R.string.simple_current_power_label), 
+						Double.toString(sensorData.getCurrentPower()) + " kW")); // (label, value)
+				list.add(putData(getString(R.string.simple_totalt_energy), 
+						Integer.toString((int)EnergyHelper.calculateKWH(sensorData.getNumberOfTicks(),
+								sensorSettings.getInt(getString(R.string.SENSOR_PREFS_NUMBER_OF_TICKS),
+										Integer.parseInt(getString(R.string.default_number_of_ticks))))) + " kWH"));
+				list.add(putData(getString(R.string.simple_last_contact),
+						sensorData.getLastContact().getTime().toString())); // TODO: fix with SimpleDateFormat
+			}
+			return list;
 		}
-		return list;
+		return null;
 	}
 	
 	
