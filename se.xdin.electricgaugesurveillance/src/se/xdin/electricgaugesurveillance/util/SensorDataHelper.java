@@ -32,7 +32,6 @@ public class SensorDataHelper {
 	}
 	
 	public static void closeSocket(Socket s) {
-		System.out.println("clost socket method");
 		try {
 			if (s != null) {
 				OutputStream output = s.getOutputStream();
@@ -65,20 +64,12 @@ public class SensorDataHelper {
             output = s.getOutputStream();
             Calendar cal = Calendar.getInstance();
             cal.add(Calendar.SECOND, 15);
-//            while (!input.ready() && Calendar.getInstance().before(cal) && string == null) {
-//            	try { Thread.sleep(50); } catch (Exception e) {}
-//            	System.out.println("Waiting for ack input to be ready");
-//            }
-//            System.out.println("input: " + input.ready() + ", string: " + string);
-//        	String ack = input.readLine();
-//        	System.out.println("recived ack: " + ack);
             output.write(SIMPLE_SENSOR_DATA);
             
             while (!input.ready() && Calendar.getInstance().before(cal) && string == null) {
             	try { Thread.sleep(50); } catch (Exception e) {}
             }
             string = input.readLine();
-            System.out.println("reading done: " + string);
        
 	    } catch (UnknownHostException e) {
 	            e.printStackTrace();

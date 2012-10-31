@@ -102,9 +102,7 @@ public class ChartFragment extends Fragment implements OnClickListener {
 					SensorDataHelper.closeSocket(socket);
 					socket = null;
 				}
-				System.out.println("opening socket");
 				socket = SensorDataHelper.openSocket(ipAdress, port);
-				System.out.println("socket open CHART FRAG");
 			}
 		}).start();
 		Calendar cal = Calendar.getInstance();
@@ -114,19 +112,12 @@ public class ChartFragment extends Fragment implements OnClickListener {
 			try { Thread.sleep(1000); } catch (Exception e) {}
 		}
 		if (Calendar.getInstance().after(cal)) {
-			System.out.println("time out");
 			Toast.makeText(getActivity(), "TIME OUT", Toast.LENGTH_SHORT);
 		}
 	}
 
 	@Override
 	public void onCreate(final Bundle savedInstanceState) {
-		System.out.println("craete");
-
-//		System.out.println("wait for close");
-//		try { Thread.sleep(10000); } catch (Exception e) {};
-//		System.out.println("NO MORE WAIT");
-		
 		super.onCreate(savedInstanceState);
 		
 		// Fetch preferences
@@ -167,7 +158,6 @@ public class ChartFragment extends Fragment implements OnClickListener {
 
 	@Override
 	public View onCreateView(final LayoutInflater inflater, final ViewGroup container, final Bundle savedInstanceState) {
-		System.out.println("view");
 		if (Configuration.ORIENTATION_PORTRAIT == getResources().getConfiguration().orientation) {
 			mYAxisPadding = 9;
 			mRenderer.setYLabels(15);
@@ -183,7 +173,6 @@ public class ChartFragment extends Fragment implements OnClickListener {
 
 	@Override
 	public void onActivityCreated(final Bundle savedInstanceState) {
-		System.out.println("act");
 		super.onActivityCreated(savedInstanceState);
 		mViewZoomIn = getActivity().findViewById(R.id.zoom_in);
 		mViewZoomOut = getActivity().findViewById(R.id.zoom_out);
@@ -202,7 +191,6 @@ public class ChartFragment extends Fragment implements OnClickListener {
 		
 		mRenderer.addSeriesRenderer(renderer);
 		addValue(0.0);
-		System.out.println("timer start");
 		if (!timerIsRunning) {
 			mTimer.start();
 			timerIsRunning = true;
@@ -215,7 +203,6 @@ public class ChartFragment extends Fragment implements OnClickListener {
 			mTimer.cancel();
 			timerIsRunning = false;
 		}
-		System.out.println("closing onpause");
 		SensorDataHelper.closeSocket(socket);
 		socket = null;
 		super.onPause();
@@ -225,7 +212,6 @@ public class ChartFragment extends Fragment implements OnClickListener {
 	public void onResume() {
 		if (socket == null)
 			openConnection();
-		System.out.println("timer stat");
 		if (!timerIsRunning) {
 			mTimer.start();
 			timerIsRunning = true;
@@ -282,7 +268,6 @@ public class ChartFragment extends Fragment implements OnClickListener {
 				SimpleSensorData sensorData = SensorDataHelper.getSimpleSensorData(socket);
 				if (sensorData != null) {
 					lastValue = sensorData.getCurrentPower();
-					System.out.println("last value added: " + lastValue);
 					return lastValue;
 				}
 			}
