@@ -18,6 +18,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.Toast;
@@ -43,7 +44,7 @@ public class SimpleStatisticsFragment extends ListFragment {
 		sensorSettings = getActivity().getSharedPreferences(getString(R.string.SENSOR_PREFS), 0);
 		
 		// TEMPORARY: Set ip and port
-		sensorSettings.edit().putString(getString(R.string.SENSOR_PREFS_IP_ADRESS), "10.10.100.31").commit();
+		sensorSettings.edit().putString(getString(R.string.SENSOR_PREFS_IP_ADRESS), "10.10.100.21").commit();
 		sensorSettings.edit().putInt(getString(R.string.SENSOR_PREFS_PORT), 4444).commit();
 		sensorSettings.edit().putInt(getString(R.string.SENSOR_PREFS_MAX_RETRYS), 3);
 		
@@ -51,35 +52,46 @@ public class SimpleStatisticsFragment extends ListFragment {
 		port = sensorSettings.getInt(getString(R.string.SENSOR_PREFS_PORT), 4444); // TODO : Handle default port
 		MAX_RETRYS = sensorSettings.getInt(getString(R.string.SENSOR_PREFS_MAX_RETRYS), 3);
 		
-		System.out.println("opening socket, ip:" + ipAdress + ", port: " + port + " socket " + socket);
-		
-		new Thread(new Runnable() {
-			
-			public void run() {
-				if (socket != null) {
-					SensorDataHelper.closeSocket(socket);
-					socket = null;
-				}
-				socket = SensorDataHelper.openSocket(ipAdress, port);
-				System.out.println("socket öppnad");
-			}
-		}).start();
-		
-		Calendar cal = Calendar.getInstance();
-		cal.add(Calendar.MILLISECOND, 20000); // Set time out
-		
-		while (socket == null && Calendar.getInstance().before(cal)) {
-			try { Thread.sleep(1000); } catch (Exception e) {}
-		}
-		
-		if (Calendar.getInstance().after(cal)) {
-			System.out.println("timeout");
-			Toast.makeText(getActivity(), "TIME OUT", Toast.LENGTH_SHORT);
-		} else {
-			System.out.println("socket open, socket: " + socket);
-			installAdapter();
-		}
+		System.out.println("Create opening socket, ip:" + ipAdress + ", port: " + port + " socket " + socket);
+		startExec();
 	}
+	
+	private void startExec() {
+	new Thread(new Runnable() {
+				
+				public void run() {
+					if (socket != null) {
+						SensorDataHelper.closeSocket(socket);
+						socket = null;
+						System.out.println("closing old socket");
+					}
+					socket = SensorDataHelper.openSocket(ipAdress, port);
+					System.out.println("socket öppnad");
+				}
+			}).start();
+			
+			Calendar cal = Calendar.getInstance();
+			cal.add(Calendar.MILLISECOND, 20000); // Set time out
+			
+			while (socket == null && Calendar.getInstance().before(cal)) {
+				try { Thread.sleep(1000); } catch (Exception e) {}
+			}
+			
+			if (Calendar.getInstance().after(cal)) {
+				System.out.println("timeout");
+				Toast.makeText(getActivity(), "TIME OUT", Toast.LENGTH_SHORT);
+				
+				String[] values = new String[] { "Could not connect, click to retry" };
+				
+				ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(),
+						android.R.layout.simple_list_item_1, values);
+				
+				setListAdapter(adapter);
+			} else {
+				System.out.println("socket open, socket: " + socket);
+				installAdapter();
+			}
+		}
 	
 	private void installAdapter() {
 		// TODO: Consider using a ArrayAdapter instead of simpleadapter
@@ -108,29 +120,52 @@ public class SimpleStatisticsFragment extends ListFragment {
 			Intent intent = new Intent(getActivity().getApplicationContext(), SimpleStatisticsGraphActivity.class);
 			startActivity(intent);
 		}
+		
+//		new Thread(new Runnable() {
+//			
+//			public void run() {
+//				if (socket != null) {
+//					SensorDataHelper.closeSocket(socket);
+//					socket = null;
+//				}
+//				socket = SensorDataHelper.openSocket(ipAdress, port);
+//				System.out.println("socket öppnad");
+//			}
+//		}).start();
+//		
+//		Calendar cal = Calendar.getInstance();
+//		cal.add(Calendar.MILLISECOND, 20000); // Set time out
+//		
+//		while (socket == null && Calendar.getInstance().before(cal)) {
+//			try { Thread.sleep(1000); } catch (Exception e) {}
+//		}
+//		
+//		if (Calendar.getInstance().before(cal)) {
+//			installAdapter();
+//		}
+	}
+	
+	
+	@Override
+	public void onPause() {
+		SensorDataHelper.closeSocket(socket);
+		socket = null;
+		super.onPause();
 	}
 	
 	@Override
-	public void onStop() {
-		super.onStop();
-		new Thread(new Runnable() {
-			public void run() {
-				SensorDataHelper.closeSocket(socket);
-			}
-		}).start();
+	public void onResume() {
+		System.out.println("On resume opening socket, ip:" + ipAdress + ", port: " + port + " socket " + socket);
+		if (socket == null)
+			startExec();
+		super.onResume();
 	}
-
+	
 	private ArrayList<Map<String, String>> getData() {
 		if (socket.isConnected()) {
 			SimpleSensorData sensorData = SensorDataHelper.getSimpleSensorData(socket);
-			if (sensorData == null) {
-				SensorDataHelper.closeSocket(socket);
-				socket = SensorDataHelper.openSocket(ipAdress, port);
-				sensorData = SensorDataHelper.getSimpleSensorData(socket);
-			}
-			
 			ArrayList<Map<String, String>> list = new ArrayList<Map<String, String>>();
-			if (sensorData != null) {
+			if (sensorData != null && list != null) {
 				list.add(putData(getString(R.string.simple_current_power_label), 
 						Double.toString(sensorData.getCurrentPower()) + " kW")); // (label, value)
 				list.add(putData(getString(R.string.simple_totalt_energy), 

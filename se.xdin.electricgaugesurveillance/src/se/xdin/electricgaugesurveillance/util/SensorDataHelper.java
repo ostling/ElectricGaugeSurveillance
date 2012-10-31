@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Calendar;
 
@@ -18,7 +19,6 @@ public class SensorDataHelper {
 	
 	public static Socket openSocket(final String ipAdress, final int port) {
 		Socket s = null;
-		System.out.println("previous instances of socket: " + Socket.class);
 		try {
 			s = new Socket(ipAdress, port);
 		} catch (UnknownHostException e) {
@@ -27,59 +27,64 @@ public class SensorDataHelper {
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} catch (Exception e) {
-			System.out.println("unknown exception");
 		}
-		
 		return s;
 	}
 	
 	public static void closeSocket(Socket s) {
+		System.out.println("clost socket method");
 		try {
-			if (s != null)
+			if (s != null) {
+				OutputStream output = s.getOutputStream();
+				InputStreamReader input = new InputStreamReader(s.getInputStream());
+				try {
+		    		if (input != null)
+		    			input.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				try {
+		    		if (output != null)
+		    			output.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 				s.close();
+			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 	
 	public static SimpleSensorData getSimpleSensorData(Socket s) {
+		BufferedReader input = null;
+		OutputStream output = null;
+		string = null;
 	    try {
-//            Socket s = new Socket(ipAdress, port);
-           
-            //outgoing stream redirect to socket
-	    	BufferedReader input = new BufferedReader(new InputStreamReader(s.getInputStream()));
-            OutputStream out = s.getOutputStream();
-           System.out.println("writing");
-            out.write(SIMPLE_SENSOR_DATA);
-            
-            //read line(s)
-            System.out.println("wait to ready");
-//            int retrys = 0;
-//            while (!input.ready()) {
-//            	retrys++;
-//            	if (retrys > 3)
-//            		return null;
-            	try{ Thread.sleep(150); } catch(InterruptedException e){}
-            	
+	    	input = new BufferedReader(new InputStreamReader(s.getInputStream()));
+            output = s.getOutputStream();
+            Calendar cal = Calendar.getInstance();
+            cal.add(Calendar.SECOND, 15);
+//            while (!input.ready() && Calendar.getInstance().before(cal) && string == null) {
+//            	try { Thread.sleep(50); } catch (Exception e) {}
+//            	System.out.println("Waiting for ack input to be ready");
 //            }
-            System.out.println("ready to read");
+//            System.out.println("input: " + input.ready() + ", string: " + string);
+//        	String ack = input.readLine();
+//        	System.out.println("recived ack: " + ack);
+            output.write(SIMPLE_SENSOR_DATA);
+            
+            while (!input.ready() && Calendar.getInstance().before(cal) && string == null) {
+            	try { Thread.sleep(50); } catch (Exception e) {}
+            }
             string = input.readLine();
             System.out.println("reading done: " + string);
-            //Close connection
-//            s.close();
        
 	    } catch (UnknownHostException e) {
-	            // TODO Auto-generated catch block
 	            e.printStackTrace();
 	    } catch (IOException e) {
-	            // TODO Auto-generated catch block
 	            e.printStackTrace();
-	    } catch (Exception e) {
-	    	System.out.println("UNHANDLED EXCEPTION SENSORDATAHELPER");
 	    }
-	    
 		if (string != null)
 			if (!string.equals(""))
 				return handleReadLine(string);
@@ -98,6 +103,9 @@ public class SensorDataHelper {
 		try {
 			String year = pieces[0], month = pieces[1], day = pieces[2];
 			String hour = pieces[3], minute = pieces[4], second = pieces[5];
+			if (year.contains("ack")) { // TODO: fix ack string to be setting or pre-defined
+				year = year.substring(3);
+			}
 			double power = Double.parseDouble(pieces[6]);
 			long ticks = Integer.parseInt(pieces[7]);
 			Calendar dateTime = Calendar.getInstance();

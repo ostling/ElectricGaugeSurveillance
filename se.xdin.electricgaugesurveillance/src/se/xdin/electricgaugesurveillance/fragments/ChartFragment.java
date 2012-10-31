@@ -61,11 +61,13 @@ public class ChartFragment extends Fragment implements OnClickListener {
 	private SharedPreferences sensorSettings = null;
 	private String ipAdress;
 	private int port;
+	private double lastValue = 0;
+	private boolean timerIsRunning = false;
 	
 	private Socket socket;
 
 
-	private final CountDownTimer mTimer = new CountDownTimer(15 * 60 * 1000, 1000) {
+	private final CountDownTimer mTimer = new CountDownTimer(15 * 60 * 1000, 3000) {
 		@Override
 		public void onTick(final long millisUntilFinished) {
 			new GetSensorData().execute("");
@@ -100,7 +102,9 @@ public class ChartFragment extends Fragment implements OnClickListener {
 					SensorDataHelper.closeSocket(socket);
 					socket = null;
 				}
+				System.out.println("opening socket");
 				socket = SensorDataHelper.openSocket(ipAdress, port);
+				System.out.println("socket open CHART FRAG");
 			}
 		}).start();
 		Calendar cal = Calendar.getInstance();
@@ -118,6 +122,11 @@ public class ChartFragment extends Fragment implements OnClickListener {
 	@Override
 	public void onCreate(final Bundle savedInstanceState) {
 		System.out.println("craete");
+
+//		System.out.println("wait for close");
+//		try { Thread.sleep(10000); } catch (Exception e) {};
+//		System.out.println("NO MORE WAIT");
+		
 		super.onCreate(savedInstanceState);
 		
 		// Fetch preferences
@@ -193,16 +202,35 @@ public class ChartFragment extends Fragment implements OnClickListener {
 		
 		mRenderer.addSeriesRenderer(renderer);
 		addValue(0.0);
-		mTimer.start();
-	}
-
-	@Override
-	public void onStop() {
-		super.onStop();
-		if (null != mTimer) {
-			mTimer.cancel();
+		System.out.println("timer start");
+		if (!timerIsRunning) {
+			mTimer.start();
+			timerIsRunning = true;
 		}
+	}
+	
+	@Override
+	public void onPause() {
+		if (timerIsRunning) {
+			mTimer.cancel();
+			timerIsRunning = false;
+		}
+		System.out.println("closing onpause");
 		SensorDataHelper.closeSocket(socket);
+		socket = null;
+		super.onPause();
+	}
+	
+	@Override
+	public void onResume() {
+		if (socket == null)
+			openConnection();
+		System.out.println("timer stat");
+		if (!timerIsRunning) {
+			mTimer.start();
+			timerIsRunning = true;
+		}
+		super.onResume();
 	}
 
 	private void addValue(double value) {
@@ -248,18 +276,17 @@ public class ChartFragment extends Fragment implements OnClickListener {
 
 		@Override
 		protected Double doInBackground(String... params) {
-			System.out.println("Fetching data, ip: " + ipAdress + ", port: " + port);
 			if (!socket.isConnected())
 				openConnection();
 			if (socket.isConnected()) {
 				SimpleSensorData sensorData = SensorDataHelper.getSimpleSensorData(socket);
-				
 				if (sensorData != null) {
-					System.out.println("Data fetched from sensor " + sensorData.getCurrentPower());
-					return sensorData.getCurrentPower();
+					lastValue = sensorData.getCurrentPower();
+					System.out.println("last value added: " + lastValue);
+					return lastValue;
 				}
 			}
-			return 0.0;
+			return lastValue;
 		}
 		
 		@Override
