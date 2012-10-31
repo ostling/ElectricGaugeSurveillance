@@ -59,8 +59,9 @@ public class ChartFragment extends Fragment implements OnClickListener {
 	private int mYAxisPadding = 5;
 	
 	private SharedPreferences sensorSettings = null;
-	private String ipAdress;
-	private int port;
+	private String IP_ADDRESS;
+	private int PORT;
+	private int SOCKET_TIMEOUT;
 	private double lastValue = 0;
 	private boolean timerIsRunning = false;
 	
@@ -102,11 +103,11 @@ public class ChartFragment extends Fragment implements OnClickListener {
 					SensorDataHelper.closeSocket(socket);
 					socket = null;
 				}
-				socket = SensorDataHelper.openSocket(ipAdress, port);
+				socket = SensorDataHelper.openSocket(IP_ADDRESS, PORT);
 			}
 		}).start();
 		Calendar cal = Calendar.getInstance();
-		cal.add(Calendar.MILLISECOND, 20000); // Set time out
+		cal.add(Calendar.MILLISECOND, SOCKET_TIMEOUT); // Set time out
 		
 		while (socket == null || Calendar.getInstance().after(cal)) {
 			try { Thread.sleep(1000); } catch (Exception e) {}
@@ -123,8 +124,9 @@ public class ChartFragment extends Fragment implements OnClickListener {
 		// Fetch preferences
 		sensorSettings = getActivity().getSharedPreferences(getString(R.string.SENSOR_PREFS), 0);
 		
-		ipAdress = sensorSettings.getString(getString(R.string.SENSOR_PREFS_IP_ADRESS), null); // TODO : Handle null
-		port = sensorSettings.getInt(getString(R.string.SENSOR_PREFS_PORT), 4444); // TODO : Handle default port
+		IP_ADDRESS = sensorSettings.getString(getString(R.string.SENSOR_PREFS_IP_ADDRESS), null); // TODO : Handle null
+		PORT = sensorSettings.getInt(getString(R.string.SENSOR_PREFS_PORT), 4444); // TODO : Handle default port
+		SOCKET_TIMEOUT = sensorSettings.getInt(getString(R.string.SENSOR_PREFS_SOCKET_TIMEOUT), 20000);
 		
 		openConnection();
 		

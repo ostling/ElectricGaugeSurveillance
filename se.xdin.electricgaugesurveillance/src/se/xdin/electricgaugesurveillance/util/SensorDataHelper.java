@@ -13,7 +13,11 @@ import se.xdin.electricgaugesurveillance.models.SimpleSensorData;
 
 public class SensorDataHelper {
 	
+	/* Settings : TODO : Fix to fetch from shared preferences */
 	public final static int SIMPLE_SENSOR_DATA = 10;
+	public final static int SENSOR_SAMPLE_TIME = 50;
+	public final static int SENSOR_TIME_OUT = 15000;
+	public final static String ACK_STRING = "ack";
 	
 	static String string = null;
 	
@@ -63,11 +67,11 @@ public class SensorDataHelper {
 	    	input = new BufferedReader(new InputStreamReader(s.getInputStream()));
             output = s.getOutputStream();
             Calendar cal = Calendar.getInstance();
-            cal.add(Calendar.SECOND, 15);
+            cal.add(Calendar.MILLISECOND, SENSOR_TIME_OUT);
             output.write(SIMPLE_SENSOR_DATA);
             
             while (!input.ready() && Calendar.getInstance().before(cal) && string == null) {
-            	try { Thread.sleep(50); } catch (Exception e) {}
+            	try { Thread.sleep(SENSOR_SAMPLE_TIME); } catch (Exception e) {}
             }
             string = input.readLine();
        
@@ -94,7 +98,7 @@ public class SensorDataHelper {
 		try {
 			String year = pieces[0], month = pieces[1], day = pieces[2];
 			String hour = pieces[3], minute = pieces[4], second = pieces[5];
-			if (year.contains("ack")) { // TODO: fix ack string to be setting or pre-defined
+			if (year.contains(ACK_STRING)) { // TODO: fix ack string to be setting or pre-defined
 				year = year.substring(3);
 			}
 			double power = Double.parseDouble(pieces[6]);
