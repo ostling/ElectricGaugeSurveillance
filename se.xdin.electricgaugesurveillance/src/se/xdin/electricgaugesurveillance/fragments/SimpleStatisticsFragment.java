@@ -131,20 +131,11 @@ public class SimpleStatisticsFragment extends ListFragment {
 	
 	@Override
 	public void onPause() {
-		System.out.println("closing socket simple");
-		SensorDataHelper.closeSocket(socket);
-		System.out.println("socket closed simple");
-		socket = null;
 		super.onPause();
 	}
 	
 	@Override
 	public void onResume() {
-		if (socket == null) {
-			System.out.println("opening socket simple");
-			startExec();
-			System.out.println("socket open simple");
-		}
 		super.onResume();
 	}
 	
