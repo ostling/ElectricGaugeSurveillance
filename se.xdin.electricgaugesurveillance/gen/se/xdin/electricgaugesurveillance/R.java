@@ -47,6 +47,7 @@ public final class R {
         public static final int default_number_of_ticks=0x7f040006;
         public static final int hello_world=0x7f040001;
         public static final int menu_settings=0x7f040002;
+        public static final int service_name=0x7f040011;
         public static final int simple_current_power_label=0x7f040005;
         public static final int simple_last_contact=0x7f040007;
         public static final int simple_statistics=0x7f040004;

@@ -1,22 +1,24 @@
 package se.xdin.electricgaugesurveillance.fragments;
 
-import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
 import se.xdin.electricgaugesurveillance.R;
 import se.xdin.electricgaugesurveillance.SimpleStatisticsGraphActivity;
+import se.xdin.electricgaugesurveillance.application.service.SimpleStatisticsService;
 import se.xdin.electricgaugesurveillance.models.SimpleSensorData;
 import se.xdin.electricgaugesurveillance.util.EnergyHelper;
-import se.xdin.electricgaugesurveillance.util.SensorDataHelper;
 
 import android.app.ListFragment;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
@@ -36,8 +38,7 @@ public class SimpleStatisticsFragment extends ListFragment {
 	private static int PORT;
 	private static int SOCKET_TIMEOUT;
 	
-	
-	Socket socket = null;
+	SimpleStatisticsService service;
 	
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
@@ -57,42 +58,24 @@ public class SimpleStatisticsFragment extends ListFragment {
 		MAX_RETRYS = sensorSettings.getInt(getString(R.string.SENSOR_PREFS_MAX_RETRYS), 3);
 		SOCKET_TIMEOUT = sensorSettings.getInt(getString(R.string.SENSOR_PREFS_SOCKET_TIMEOUT), 20000);
 		
-//		startExec();
+		service = ((se.xdin.electricgaugesurveillance.SimpleStatisticsActivity) getActivity()).service;
+		
+		startExec();
 	}
 	
 	private void startExec() {
-		new Thread(new Runnable() {
-			public void run() {
-				if (socket != null) {
-					SensorDataHelper.closeSocket(socket);
-					socket = null;
-				}
-				socket = SensorDataHelper.openSocket(IP_ADDRESS, PORT);
-			}
-		}).start();
-		
 		String[] values = new String[] { "Waiting" };
 		ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(),
 				android.R.layout.simple_list_item_1, values);
-		
 		setListAdapter(adapter);
-		installAdapter();
+		
+//		installAdapter();
 	}
 	
 	private void installAdapter() {
 		// TODO: Consider using a ArrayAdapter instead of simpleadapter
 		new Thread(new Runnable() {
 			public void run() {
-				Calendar cal = Calendar.getInstance();
-				cal.add(Calendar.MILLISECOND, SOCKET_TIMEOUT); // Set time out
-				
-				while (socket == null && Calendar.getInstance().before(cal)) {
-					try { Thread.sleep(1000); } catch (Exception e) {}
-				}
-				
-				if (Calendar.getInstance().after(cal))
-					return;
-				
 				// Create list
 				ArrayList<Map<String, String>> tempList = getData();
 				if (tempList == null) {
@@ -140,22 +123,19 @@ public class SimpleStatisticsFragment extends ListFragment {
 	}
 	
 	private ArrayList<Map<String, String>> getData() {
-		if (socket.isConnected()) {
-			SimpleSensorData sensorData = SensorDataHelper.getSimpleSensorData(socket);
-			ArrayList<Map<String, String>> list = new ArrayList<Map<String, String>>();
-			if (sensorData != null && list != null) {
-				list.add(putData(getString(R.string.simple_current_power_label), 
-						Double.toString(sensorData.getCurrentPower()) + " kW")); // (label, value)
-				list.add(putData(getString(R.string.simple_totalt_energy), 
-						Integer.toString((int)EnergyHelper.calculateKWH(sensorData.getNumberOfTicks(),
-								sensorSettings.getInt(getString(R.string.SENSOR_PREFS_NUMBER_OF_TICKS),
-										Integer.parseInt(getString(R.string.default_number_of_ticks))))) + " kWH"));
-				list.add(putData(getString(R.string.simple_last_contact),
-						sensorData.getLastContact().getTime().toString())); // TODO: fix with SimpleDateFormat
-			}
-			return list;
+		SimpleSensorData sensorData = service.getSimpleSensorData();
+		ArrayList<Map<String, String>> list = new ArrayList<Map<String, String>>();
+		if (sensorData != null && list != null) {
+			list.add(putData(getString(R.string.simple_current_power_label), 
+					Double.toString(sensorData.getCurrentPower()) + " kW")); // (label, value)
+			list.add(putData(getString(R.string.simple_totalt_energy), 
+					Integer.toString((int)EnergyHelper.calculateKWH(sensorData.getNumberOfTicks(),
+							sensorSettings.getInt(getString(R.string.SENSOR_PREFS_NUMBER_OF_TICKS),
+									Integer.parseInt(getString(R.string.default_number_of_ticks))))) + " kWH"));
+			list.add(putData(getString(R.string.simple_last_contact),
+					sensorData.getLastContact().getTime().toString())); // TODO: fix with SimpleDateFormat
 		}
-		return null;
+		return list;
 	}
 	
 	

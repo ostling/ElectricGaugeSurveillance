@@ -19,7 +19,7 @@ import android.os.IBinder;
 public class SimpleStatisticsService extends Service {
 	
 	private Socket socket;
-	private IBinder binder = new CustomBinder();
+	private final IBinder binder = new CustomBinder();
 	
 	/* Settings : TODO : Fix to fetch from shared preferences */
 	public final static int SIMPLE_SENSOR_DATA = 10;
@@ -27,9 +27,16 @@ public class SimpleStatisticsService extends Service {
 	public final static int SENSOR_TIME_OUT = 15000;
 	public final static String ACK_STRING = "ack";
 	
+	@Override
+	public void onCreate() {
+		System.out.println("created service");
+		super.onCreate();
+	}
+	
 	
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
+		System.out.println("START SERVICE");
 		Uri data = intent.getData();
 		String ipAdress = intent.getStringExtra("IP_ADDRESS");
 		int port = intent.getIntExtra("PORT", 4444);
@@ -43,8 +50,19 @@ public class SimpleStatisticsService extends Service {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
+		System.out.println("connected");
 		return Service.START_STICKY;
+	}
+	
+	@Override
+	public IBinder onBind(Intent intent) {
+		return binder;
+	}
+	
+	public class CustomBinder extends Binder {
+		public SimpleStatisticsService getService() {
+			return SimpleStatisticsService.this;
+		}
 	}
 	
 	public SimpleSensorData getSimpleSensorData() {
@@ -104,17 +122,4 @@ public class SimpleStatisticsService extends Service {
 			return null;
 		}
 	}
-	
-	@Override
-	public IBinder onBind(Intent intent) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-	
-	public class CustomBinder extends Binder {
-		SimpleStatisticsService getService() {
-			return SimpleStatisticsService.this;
-		}
-	}
-
 }
