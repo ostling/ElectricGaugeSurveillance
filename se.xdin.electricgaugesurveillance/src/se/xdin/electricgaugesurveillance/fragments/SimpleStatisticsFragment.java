@@ -34,7 +34,7 @@ public class SimpleStatisticsFragment extends ListFragment {
 	private static int MAX_RETRYS;
 	private static String IP_ADDRESS;
 	private static int PORT;
-	private static int SENSOR_PREFS_SOCKET_TIMEOUT;
+	private static int SOCKET_TIMEOUT;
 	
 	
 	Socket socket = null;
@@ -47,7 +47,7 @@ public class SimpleStatisticsFragment extends ListFragment {
 		sensorSettings = getActivity().getSharedPreferences(getString(R.string.SENSOR_PREFS), 0);
 		
 		// TEMPORARY: Set ip and port
-		sensorSettings.edit().putString(getString(R.string.SENSOR_PREFS_IP_ADDRESS), "10.10.100.21").commit();
+		sensorSettings.edit().putString(getString(R.string.SENSOR_PREFS_IP_ADDRESS), "10.10.100.44").commit();
 		sensorSettings.edit().putInt(getString(R.string.SENSOR_PREFS_PORT), 4444).commit();
 		sensorSettings.edit().putInt(getString(R.string.SENSOR_PREFS_MAX_RETRYS), 3);
 		sensorSettings.edit().putInt(getString(R.string.SENSOR_PREFS_SOCKET_TIMEOUT), 20000);
@@ -55,9 +55,9 @@ public class SimpleStatisticsFragment extends ListFragment {
 		IP_ADDRESS = sensorSettings.getString(getString(R.string.SENSOR_PREFS_IP_ADDRESS), null); // TODO : Handle null
 		PORT = sensorSettings.getInt(getString(R.string.SENSOR_PREFS_PORT), 4444); // TODO : Handle default port
 		MAX_RETRYS = sensorSettings.getInt(getString(R.string.SENSOR_PREFS_MAX_RETRYS), 3);
-		SENSOR_PREFS_SOCKET_TIMEOUT = sensorSettings.getInt(getString(R.string.SENSOR_PREFS_SOCKET_TIMEOUT), 20000);
+		SOCKET_TIMEOUT = sensorSettings.getInt(getString(R.string.SENSOR_PREFS_SOCKET_TIMEOUT), 20000);
 		
-		startExec();
+//		startExec();
 	}
 	
 	private void startExec() {
@@ -71,47 +71,50 @@ public class SimpleStatisticsFragment extends ListFragment {
 			}
 		}).start();
 		
-		Calendar cal = Calendar.getInstance();
-		cal.add(Calendar.MILLISECOND, SENSOR_PREFS_SOCKET_TIMEOUT); // Set time out
+		String[] values = new String[] { "Waiting" };
+		ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(),
+				android.R.layout.simple_list_item_1, values);
 		
-		while (socket == null && Calendar.getInstance().before(cal)) {
-			try { Thread.sleep(1000); } catch (Exception e) {}
-		}
-		
-		if (Calendar.getInstance().after(cal)) {
-			Toast.makeText(getActivity(), "TIME OUT", Toast.LENGTH_SHORT).show();
-			String[] values = new String[] { "Could not connect, click to retry" };
-			ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(),
-					android.R.layout.simple_list_item_1, values);
-			
-			setListAdapter(adapter);
-		} else {
-			installAdapter();
-		}
+		setListAdapter(adapter);
+		installAdapter();
 	}
 	
 	private void installAdapter() {
 		// TODO: Consider using a ArrayAdapter instead of simpleadapter
 		new Thread(new Runnable() {
 			public void run() {
-			// Create list
-			ArrayList<Map<String, String>> tempList = getData();
-			if (tempList == null) {
-				;
-			} if (tempList.isEmpty()) {
-				;
-			} else {
-				list = tempList;
-			}
-			String[] from = { "name", "value" };
-			int[] to = {android.R.id.text1, android.R.id.text2 };
-			adapter = new SimpleAdapter(getActivity(), list,
-				android.R.layout.simple_list_item_2, from, to);
-			handler.post(new Runnable() {
-				public void run() {
-					setListAdapter(adapter);
-				};
-			});
+				Calendar cal = Calendar.getInstance();
+				cal.add(Calendar.MILLISECOND, SOCKET_TIMEOUT); // Set time out
+				
+				while (socket == null && Calendar.getInstance().before(cal)) {
+					try { Thread.sleep(1000); } catch (Exception e) {}
+				}
+				
+				if (Calendar.getInstance().after(cal))
+					return;
+				
+				// Create list
+				ArrayList<Map<String, String>> tempList = getData();
+				if (tempList == null) {
+					;
+				} if (tempList.isEmpty()) {
+					;
+				} else {
+					list = tempList;
+				}
+				String[] from = { "name", "value" };
+				if (getActivity() == null) {
+					System.out.println("get activity null");
+					return;
+				}
+				int[] to = {android.R.id.text1, android.R.id.text2 };
+				adapter = new SimpleAdapter(getActivity(), list,
+					android.R.layout.simple_list_item_2, from, to);
+				handler.post(new Runnable() {
+					public void run() {
+						setListAdapter(adapter);
+					};
+				});
 			}
 		}).start();
 	}
@@ -128,15 +131,20 @@ public class SimpleStatisticsFragment extends ListFragment {
 	
 	@Override
 	public void onPause() {
+		System.out.println("closing socket simple");
 		SensorDataHelper.closeSocket(socket);
+		System.out.println("socket closed simple");
 		socket = null;
 		super.onPause();
 	}
 	
 	@Override
 	public void onResume() {
-		if (socket == null)
+		if (socket == null) {
+			System.out.println("opening socket simple");
 			startExec();
+			System.out.println("socket open simple");
+		}
 		super.onResume();
 	}
 	

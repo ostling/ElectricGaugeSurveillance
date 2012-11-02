@@ -25,6 +25,7 @@ public class SensorDataHelper {
 		Socket s = null;
 		try {
 			s = new Socket(ipAdress, port);
+//			s.setKeepAlive(true);
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -68,12 +69,14 @@ public class SensorDataHelper {
             output = s.getOutputStream();
             Calendar cal = Calendar.getInstance();
             cal.add(Calendar.MILLISECOND, SENSOR_TIME_OUT);
+            
             output.write(SIMPLE_SENSOR_DATA);
             
             while (!input.ready() && Calendar.getInstance().before(cal) && string == null) {
             	try { Thread.sleep(SENSOR_SAMPLE_TIME); } catch (Exception e) {}
             }
-            string = input.readLine();
+            if (!s.isClosed())
+            	string = input.readLine();
        
 	    } catch (UnknownHostException e) {
 	            e.printStackTrace();
@@ -84,6 +87,17 @@ public class SensorDataHelper {
 			if (!string.equals(""))
 				return handleReadLine(string);
 		return null;
+	}
+	
+	static void printSocketStatus(Socket s) {
+		System.out.println("socket status down: " + s.isOutputShutdown());
+        try {
+			System.out.println("socket status keep alive: " + s.getKeepAlive());
+		} catch (SocketException e) {
+			System.out.println("keep alive excep");
+			e.printStackTrace();
+		}
+        System.out.println("socket status input shutdown: " + s.isInputShutdown());
 	}
 	
 	

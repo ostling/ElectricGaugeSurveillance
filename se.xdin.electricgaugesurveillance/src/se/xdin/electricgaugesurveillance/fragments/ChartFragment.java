@@ -10,6 +10,7 @@ import java.util.Random;
 import org.achartengine.ChartFactory;
 import org.achartengine.GraphicalView;
 import org.achartengine.chart.PointStyle;
+import org.achartengine.chart.BarChart.Type;
 import org.achartengine.model.TimeSeries;
 import org.achartengine.model.XYMultipleSeriesDataset;
 import org.achartengine.renderer.XYMultipleSeriesRenderer;
@@ -28,6 +29,7 @@ import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -55,7 +57,7 @@ public class ChartFragment extends Fragment implements OnClickListener {
 	private TimeSeries series;
 	private double mYAxisMin = Double.MAX_VALUE;
 	private double mYAxisMax = Double.MIN_VALUE;
-	private double mZoomLevel = 0.1;
+	private double mZoomLevel = 10;
 	private int mYAxisPadding = 5;
 	
 	private SharedPreferences sensorSettings = null;
@@ -65,13 +67,54 @@ public class ChartFragment extends Fragment implements OnClickListener {
 	private double lastValue = 0;
 	private boolean timerIsRunning = false;
 	
+	private static final int SENSOR_SAMPLE_TIME = 1500;
+	private static final String X_LABEL = "Time";
+	private static final String Y_LABEL = "Power (kW)";
+	private static final String CHART_TITLE = "Power consumption";
+	
+	private Handler handler = new Handler();
+	
 	private Socket socket;
 
 
-	private final CountDownTimer mTimer = new CountDownTimer(15 * 60 * 1000, 3000) {
+	private final CountDownTimer mTimer = new CountDownTimer(15 * 60 * 1000, SENSOR_SAMPLE_TIME) {
 		@Override
 		public void onTick(final long millisUntilFinished) {
-			new GetSensorData().execute("");
+			new Thread(new Runnable() {
+				public void run() {
+					if (getActivity() != null) {
+						Calendar cal = Calendar.getInstance();
+						cal.add(Calendar.MILLISECOND, SOCKET_TIMEOUT); // Set time out
+						
+						while (socket == null && Calendar.getInstance().before(cal)) {
+							try { Thread.sleep(1000); } catch (Exception e) {}
+						}
+						if (Calendar.getInstance().after(cal)) {
+							handler.post(new Runnable() {
+								public void run() {
+									if (getActivity() != null)
+										Toast.makeText(getActivity(), "TIME OUT", Toast.LENGTH_SHORT);
+								};
+							});
+							return;
+						}
+						
+						if (!socket.isConnected())
+							openConnection();
+						if (socket.isConnected()) {
+							SimpleSensorData sensorData = SensorDataHelper.getSimpleSensorData(socket);
+							if (sensorData != null) {
+								lastValue = sensorData.getCurrentPower();
+							}
+						}
+					}
+					handler.post(new Runnable() {
+						public void run() {
+							addValue(lastValue);
+						};
+					});
+				}
+			}).start();
 		}
 
 		@Override
@@ -81,7 +124,7 @@ public class ChartFragment extends Fragment implements OnClickListener {
 
 	private final ZoomListener mZoomListener = new ZoomListener() {
 		public void zoomReset() {
-			mZoomLevel = 0.1;
+			mZoomLevel = 10;
 			scrollGraph(new Date().getTime());
 		}
 
@@ -106,15 +149,6 @@ public class ChartFragment extends Fragment implements OnClickListener {
 				socket = SensorDataHelper.openSocket(IP_ADDRESS, PORT);
 			}
 		}).start();
-		Calendar cal = Calendar.getInstance();
-		cal.add(Calendar.MILLISECOND, SOCKET_TIMEOUT); // Set time out
-		
-		while (socket == null || Calendar.getInstance().after(cal)) {
-			try { Thread.sleep(1000); } catch (Exception e) {}
-		}
-		if (Calendar.getInstance().after(cal)) {
-			Toast.makeText(getActivity(), "TIME OUT", Toast.LENGTH_SHORT);
-		}
 	}
 
 	@Override
@@ -127,8 +161,6 @@ public class ChartFragment extends Fragment implements OnClickListener {
 		IP_ADDRESS = sensorSettings.getString(getString(R.string.SENSOR_PREFS_IP_ADDRESS), null); // TODO : Handle null
 		PORT = sensorSettings.getInt(getString(R.string.SENSOR_PREFS_PORT), 4444); // TODO : Handle default port
 		SOCKET_TIMEOUT = sensorSettings.getInt(getString(R.string.SENSOR_PREFS_SOCKET_TIMEOUT), 20000);
-		
-		openConnection();
 		
 		mDataset = new XYMultipleSeriesDataset();
 		mRenderer = new XYMultipleSeriesRenderer();
@@ -150,7 +182,12 @@ public class ChartFragment extends Fragment implements OnClickListener {
 		mRenderer.setExternalZoomEnabled(true);
 		mRenderer.setAntialiasing(true);
 		mRenderer.setInScroll(true);
-
+		
+		mRenderer.setXTitle(X_LABEL);
+		mRenderer.setYTitle(Y_LABEL);
+		mRenderer.setChartTitle(CHART_TITLE);
+		mRenderer.setLabelsTextSize((float) 10);
+		System.out.println("on cre finish");
 	}
 
 	private TimeSeries createSeries() {
@@ -166,7 +203,7 @@ public class ChartFragment extends Fragment implements OnClickListener {
 		}
 
 		final LinearLayout view = (LinearLayout) inflater.inflate(R.layout.simple_chart_fragment, container, false);
-		mChartView = ChartFactory.getTimeChartView(getActivity(), mDataset, mRenderer, "Power consumption");
+		mChartView = ChartFactory.getTimeChartView(getActivity(), mDataset, mRenderer, "APAN");
 		mChartView.addZoomListener(mZoomListener, true, false);
 		view.addView(mChartView, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 		return view;
@@ -188,8 +225,10 @@ public class ChartFragment extends Fragment implements OnClickListener {
 		
 		renderer = new XYSeriesRenderer();
 		
-		renderer.setColor(Color.RED);
-		renderer.setPointStyle(PointStyle.CIRCLE);
+		renderer.setFillBelowLine(true);
+		renderer.setFillBelowLineColor(Color.DKGRAY);
+		renderer.setColor(Color.GREEN);
+		renderer.setLineWidth(2);
 		
 		mRenderer.addSeriesRenderer(renderer);
 		addValue(0.0);
@@ -205,15 +244,20 @@ public class ChartFragment extends Fragment implements OnClickListener {
 			mTimer.cancel();
 			timerIsRunning = false;
 		}
+		System.out.println("closing socket chart");
 		SensorDataHelper.closeSocket(socket);
+		System.out.println("socket closed chart");
 		socket = null;
 		super.onPause();
 	}
 	
 	@Override
 	public void onResume() {
-		if (socket == null)
+		if (socket == null) {
+			System.out.println("opening socket chart");
 			openConnection();
+			System.out.println("socket opened chart");
+		}
 		if (!timerIsRunning) {
 			mTimer.start();
 			timerIsRunning = true;
@@ -264,13 +308,28 @@ public class ChartFragment extends Fragment implements OnClickListener {
 
 		@Override
 		protected Double doInBackground(String... params) {
-			if (!socket.isConnected())
-				openConnection();
-			if (socket.isConnected()) {
-				SimpleSensorData sensorData = SensorDataHelper.getSimpleSensorData(socket);
-				if (sensorData != null) {
-					lastValue = sensorData.getCurrentPower();
-					return lastValue;
+			if (getActivity() != null) {
+				if (socket.isClosed()) {
+					if (socket != null)
+						SensorDataHelper.closeSocket(socket);
+					openConnection();
+					Calendar cal = Calendar.getInstance();
+					cal.add(Calendar.MILLISECOND, SOCKET_TIMEOUT); // Set time out
+					while(!socket.isClosed() && Calendar.getInstance().before(cal)) {
+						try { Thread.sleep(1000); } catch (Exception e) {}
+					}
+					if (Calendar.getInstance().after(cal)) {
+						return 0.0; // Timed out
+					}
+				}
+				if (!socket.isConnected())
+					openConnection();
+				if (socket.isConnected()) {
+					SimpleSensorData sensorData = SensorDataHelper.getSimpleSensorData(socket);
+					if (sensorData != null) {
+						lastValue = sensorData.getCurrentPower();
+						return lastValue;
+					}
 				}
 			}
 			return lastValue;
@@ -278,8 +337,9 @@ public class ChartFragment extends Fragment implements OnClickListener {
 		
 		@Override
 		protected void onPostExecute(Double result) {
-			addValue(result);
+			if (getActivity() != null) {
+				addValue(result);
+			}
 		}
-
 	}
 }

@@ -1,6 +1,7 @@
 package se.xdin.electricgaugesurveillance.fragments;
 
 import se.xdin.electricgaugesurveillance.SimpleStatisticsActivity;
+import se.xdin.electricgaugesurveillance.SimpleStatisticsGraphActivity;
 import android.app.ListFragment;
 import android.content.Intent;
 import android.os.Bundle;
@@ -35,6 +36,9 @@ public class MainViewListFragment extends ListFragment {
 		if (textView.getText().equals("Simple statistics")) {
 			Intent intent = new Intent(getActivity().getApplicationContext(),
 					SimpleStatisticsActivity.class);
+			startActivity(intent);
+		} else if (textView.getText().equals("Last week")) {
+			Intent intent = new Intent(getActivity().getApplicationContext(), SimpleStatisticsGraphActivity.class);
 			startActivity(intent);
 		} else {
 			System.out.println("no match: " + textView.getText());
