@@ -20,6 +20,7 @@ public class SimpleStatisticsActivity extends Activity {
 		@Override
 		public void onServiceConnected(ComponentName className, IBinder binder) {
 			service = ((SimpleStatisticsService.CustomBinder) binder).getService();
+			Log.d("service", "Service connected in SimpleStatisticsActivity");
 		}
 
 		@Override

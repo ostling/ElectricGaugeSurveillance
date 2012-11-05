@@ -15,6 +15,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Binder;
 import android.os.IBinder;
+import android.util.Log;
 
 public class SimpleStatisticsService extends Service {
 	
@@ -30,7 +31,6 @@ public class SimpleStatisticsService extends Service {
 	
 	@Override
 	public void onCreate() {
-		System.out.println("created service");
 		super.onCreate();
 	}
 	
@@ -40,15 +40,13 @@ public class SimpleStatisticsService extends Service {
 		final String ipAdress = intent.getStringExtra("IP_ADDRESS");
 		final int port = intent.getIntExtra("PORT", 4444);
 		
-		System.out.println("starting socket: " + ipAdress + " port: " + port);
-		
 		new Thread(new Runnable() {
 			@Override
 			public void run() {
 				socket = null;
 				try {
 					socket = new Socket(ipAdress, port);
-					System.out.println("socket open");
+					Log.d("Socket", "Socket open");
 					isConnected = true;
 //					s.setKeepAlive(true);
 				} catch (UnknownHostException e) {
@@ -78,18 +76,15 @@ public class SimpleStatisticsService extends Service {
 		OutputStream output = null;
 		String string = null;
 	    try {
-	    	System.out.println("get simple sensor data");
 	    	input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             output = socket.getOutputStream();
             Calendar cal = Calendar.getInstance();
             cal.add(Calendar.MILLISECOND, SENSOR_TIME_OUT);
             
             output.write(SIMPLE_SENSOR_DATA);
-            System.out.println("sent request");
             
             if (!socket.isClosed())
             	string = input.readLine();
-            System.out.println("passed read");
        
 	    } catch (UnknownHostException e) {
 	            e.printStackTrace();

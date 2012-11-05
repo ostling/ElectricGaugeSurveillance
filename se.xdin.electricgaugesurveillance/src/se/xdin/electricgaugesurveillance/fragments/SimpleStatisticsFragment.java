@@ -16,6 +16,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
+import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
@@ -46,7 +47,7 @@ public class SimpleStatisticsFragment extends ListFragment {
 					new Thread(new Runnable() {
 						public void run() {
 							String[] from = { "name", "value" };
-							System.out.println("requesting data SIMPLE");
+							Log.d("SimpleStatistics", "requesting data SIMPLE");
 							int[] to = {android.R.id.text1, android.R.id.text2 };
 							adapter = new SimpleAdapter(getActivity(), getData(service),
 								android.R.layout.simple_list_item_2, from, to);
@@ -59,10 +60,10 @@ public class SimpleStatisticsFragment extends ListFragment {
 						}
 					}).start();
 				} else {
-					System.out.println("socket not connected, service.isConnected == false");
+					Log.d("SimpleStatistics", "socket not connected, service.isConnected == false");
 				}
 			} else {
-				System.out.println("socket not connected, service == nulll");
+				Log.d("SimpleStatistics", "socket not connected, service == null");
 			}
 		}
 

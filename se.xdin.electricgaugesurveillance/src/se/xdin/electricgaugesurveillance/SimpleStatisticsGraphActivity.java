@@ -20,9 +20,8 @@ public class SimpleStatisticsGraphActivity extends Activity {
 	private ServiceConnection mConnection = new ServiceConnection() {
 		@Override
 		public void onServiceConnected(ComponentName className, IBinder binder) {
-			System.out.println("setting service");
 			service = ((SimpleStatisticsService.CustomBinder) binder).getService();
-			System.out.println("service satt");
+			Log.d("service", "Service connected in SimpleStatisticsGraphActivity");
 		}
 
 		@Override
