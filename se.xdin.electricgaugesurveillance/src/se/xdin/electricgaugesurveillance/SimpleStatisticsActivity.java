@@ -11,13 +11,14 @@ import android.os.IBinder;
 
 public class SimpleStatisticsActivity extends Activity {
 	
-	public SimpleStatisticsService service;
+	private SimpleStatisticsService service;
 	
 	private ServiceConnection mConnection = new ServiceConnection() {
 		@Override
 		public void onServiceConnected(ComponentName className, IBinder binder) {
-			System.out.println("conn");
+			System.out.println("setting service");
 			service = ((SimpleStatisticsService.CustomBinder) binder).getService();
+			System.out.println("service satt");
 		}
 
 		@Override
@@ -29,19 +30,25 @@ public class SimpleStatisticsActivity extends Activity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		System.out.println("service started");
 		setContentView(R.layout.simple_statistics);
 		doBindService();
 	}
 	
 	private void doBindService() {
-		startService(new Intent(SimpleStatisticsActivity.this, SimpleStatisticsService.class));
+		Intent service = new Intent(SimpleStatisticsActivity.this, SimpleStatisticsService.class);
+		service.putExtra("IP_ADDRESS", "10.10.100.36");
+		service.putExtra("PORT", 4444);
+		startService(service);
 		bindService(new Intent(SimpleStatisticsActivity.this, SimpleStatisticsService.class), mConnection, Context.BIND_AUTO_CREATE);
+	}
+	
+	public SimpleStatisticsService getService() {
+		return service;
 	}
 	
 	@Override
 	protected void onDestroy() {
-		System.out.println("activity destroyed");
+		unbindService(mConnection);
 		super.onDestroy();
 	}
 }

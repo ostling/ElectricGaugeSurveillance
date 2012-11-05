@@ -26,6 +26,7 @@ public class SimpleStatisticsService extends Service {
 	public final static int SENSOR_SAMPLE_TIME = 50;
 	public final static int SENSOR_TIME_OUT = 15000;
 	public final static String ACK_STRING = "ack";
+	public boolean isConnected = false;
 	
 	@Override
 	public void onCreate() {
@@ -33,24 +34,31 @@ public class SimpleStatisticsService extends Service {
 		super.onCreate();
 	}
 	
-	
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-		System.out.println("START SERVICE");
 		Uri data = intent.getData();
-		String ipAdress = intent.getStringExtra("IP_ADDRESS");
-		int port = intent.getIntExtra("PORT", 4444);
+		final String ipAdress = intent.getStringExtra("IP_ADDRESS");
+		final int port = intent.getIntExtra("PORT", 4444);
 		
-		socket = null;
-		try {
-			socket = new Socket(ipAdress, port);
-//			s.setKeepAlive(true);
-		} catch (UnknownHostException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		System.out.println("connected");
+		System.out.println("starting socket: " + ipAdress + " port: " + port);
+		
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				socket = null;
+				try {
+					socket = new Socket(ipAdress, port);
+					System.out.println("socket open");
+					isConnected = true;
+//					s.setKeepAlive(true);
+				} catch (UnknownHostException e) {
+					e.printStackTrace();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}).start();
+		
 		return Service.START_STICKY;
 	}
 	

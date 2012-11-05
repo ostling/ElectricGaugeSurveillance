@@ -33,9 +33,7 @@
         <activity android:name="org.achartengine.GraphicalActivity"></activity>
         
         
-        <service
-            android:name="se.xdin.electricgaugesurveillance.service.SimpleStatisticsService"
-            android:label="@string/service_name" >
+        <service android:name=".application.service.SimpleStatisticsService" >
         </service>
 
     </application>

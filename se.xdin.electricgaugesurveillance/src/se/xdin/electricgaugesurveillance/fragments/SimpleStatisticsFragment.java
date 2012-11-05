@@ -5,25 +5,21 @@ import java.util.HashMap;
 import java.util.Map;
 
 import se.xdin.electricgaugesurveillance.R;
+import se.xdin.electricgaugesurveillance.SimpleStatisticsActivity;
 import se.xdin.electricgaugesurveillance.SimpleStatisticsGraphActivity;
 import se.xdin.electricgaugesurveillance.application.service.SimpleStatisticsService;
 import se.xdin.electricgaugesurveillance.models.SimpleSensorData;
 import se.xdin.electricgaugesurveillance.util.EnergyHelper;
-
 import android.app.ListFragment;
-import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Handler;
-import android.os.IBinder;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
-import android.widget.Toast;
 import android.widget.TwoLineListItem;
 
 public class SimpleStatisticsFragment extends ListFragment {
@@ -38,7 +34,44 @@ public class SimpleStatisticsFragment extends ListFragment {
 	private static int PORT;
 	private static int SOCKET_TIMEOUT;
 	
-	SimpleStatisticsService service;
+	private static final int SENSOR_SAMPLE_TIME = 5000;
+	
+	private final CountDownTimer mTimer = new CountDownTimer(15 * 60 * 1000, SENSOR_SAMPLE_TIME) {
+		@Override
+		public void onTick(final long millisUntilFinished) {
+			final SimpleStatisticsService service = getService();
+			if (service != null) {
+				if (service.isConnected) {
+					new Thread(new Runnable() {
+						public void run() {
+							String[] from = { "name", "value" };
+							System.out.println("requesting data SIMPLE");
+							int[] to = {android.R.id.text1, android.R.id.text2 };
+							adapter = new SimpleAdapter(getActivity(), getData(service),
+								android.R.layout.simple_list_item_2, from, to);
+							
+							handler.post(new Runnable() {
+								public void run() {
+									setListAdapter(adapter);
+								}
+							});
+						}
+					}).start();
+				} else {
+					System.out.println("socket not connected, service.isConnected == false");
+				}
+			} else {
+				System.out.println("socket not connected, service == nulll");
+			}
+		}
+
+		@Override
+		public void onFinish() {}
+	};
+	
+	public SimpleStatisticsService getService() {
+		return ((SimpleStatisticsActivity) getActivity()).getService();
+	}
 	
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
@@ -48,7 +81,7 @@ public class SimpleStatisticsFragment extends ListFragment {
 		sensorSettings = getActivity().getSharedPreferences(getString(R.string.SENSOR_PREFS), 0);
 		
 		// TEMPORARY: Set ip and port
-		sensorSettings.edit().putString(getString(R.string.SENSOR_PREFS_IP_ADDRESS), "10.10.100.44").commit();
+		sensorSettings.edit().putString(getString(R.string.SENSOR_PREFS_IP_ADDRESS), "10.10.100.36").commit();
 		sensorSettings.edit().putInt(getString(R.string.SENSOR_PREFS_PORT), 4444).commit();
 		sensorSettings.edit().putInt(getString(R.string.SENSOR_PREFS_MAX_RETRYS), 3);
 		sensorSettings.edit().putInt(getString(R.string.SENSOR_PREFS_SOCKET_TIMEOUT), 20000);
@@ -57,8 +90,6 @@ public class SimpleStatisticsFragment extends ListFragment {
 		PORT = sensorSettings.getInt(getString(R.string.SENSOR_PREFS_PORT), 4444); // TODO : Handle default port
 		MAX_RETRYS = sensorSettings.getInt(getString(R.string.SENSOR_PREFS_MAX_RETRYS), 3);
 		SOCKET_TIMEOUT = sensorSettings.getInt(getString(R.string.SENSOR_PREFS_SOCKET_TIMEOUT), 20000);
-		
-		service = ((se.xdin.electricgaugesurveillance.SimpleStatisticsActivity) getActivity()).service;
 		
 		startExec();
 	}
@@ -69,37 +100,7 @@ public class SimpleStatisticsFragment extends ListFragment {
 				android.R.layout.simple_list_item_1, values);
 		setListAdapter(adapter);
 		
-//		installAdapter();
-	}
-	
-	private void installAdapter() {
-		// TODO: Consider using a ArrayAdapter instead of simpleadapter
-		new Thread(new Runnable() {
-			public void run() {
-				// Create list
-				ArrayList<Map<String, String>> tempList = getData();
-				if (tempList == null) {
-					;
-				} if (tempList.isEmpty()) {
-					;
-				} else {
-					list = tempList;
-				}
-				String[] from = { "name", "value" };
-				if (getActivity() == null) {
-					System.out.println("get activity null");
-					return;
-				}
-				int[] to = {android.R.id.text1, android.R.id.text2 };
-				adapter = new SimpleAdapter(getActivity(), list,
-					android.R.layout.simple_list_item_2, from, to);
-				handler.post(new Runnable() {
-					public void run() {
-						setListAdapter(adapter);
-					};
-				});
-			}
-		}).start();
+		mTimer.start();
 	}
 	
 	@Override
@@ -114,16 +115,19 @@ public class SimpleStatisticsFragment extends ListFragment {
 	
 	@Override
 	public void onPause() {
+		mTimer.cancel();
 		super.onPause();
 	}
 	
 	@Override
 	public void onResume() {
+		mTimer.start();
 		super.onResume();
 	}
 	
-	private ArrayList<Map<String, String>> getData() {
+	private ArrayList<Map<String, String>> getData(SimpleStatisticsService service) {
 		SimpleSensorData sensorData = service.getSimpleSensorData();
+		
 		ArrayList<Map<String, String>> list = new ArrayList<Map<String, String>>();
 		if (sensorData != null && list != null) {
 			list.add(putData(getString(R.string.simple_current_power_label), 
