@@ -200,28 +200,6 @@ public class ChartFragment extends Fragment implements OnClickListener {
 		
 		mRenderer.addSeriesRenderer(renderer);
 		addValue(0.0);
-//		startTimer();
-		System.out.println("testgetting");
-		testget();
-	}
-	
-	private void testget() {
-		final SimpleStatisticsService service = getService();
-		if (service != null) {
-			if (service.isConnected) {
-				new Thread(new Runnable() {
-					public void run() {
-						final double tempValue = getData(service);
-						handler.post(new Runnable() {
-							public void run() {
-								addValue(tempValue);
-								System.out.println("added data CHART");
-							};
-						});
-					}
-				}).start();
-			}
-		}
 	}
 	
 	private void startTimer() {

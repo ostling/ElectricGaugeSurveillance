@@ -11,6 +11,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.util.Log;
 
 public class SimpleStatisticsGraphActivity extends Activity {
 	
@@ -40,11 +41,13 @@ public class SimpleStatisticsGraphActivity extends Activity {
 	private void doBindService() {
 		Intent service = new Intent(SimpleStatisticsGraphActivity.this, SimpleStatisticsService.class);
 		bindService(service, mConnection, Context.BIND_AUTO_CREATE);
+		Log.d("service", "Service bound in SimpleStatisticsGraphActivity");
 	}
 	
 	@Override
 	public void onDestroy() {
 		unbindService(mConnection);
+		Log.d("service", "Service unbound in SimpleStatisticsGraphActivity");
 		super.onDestroy();
 	}
 
@@ -55,7 +58,6 @@ public class SimpleStatisticsGraphActivity extends Activity {
 		if (null == savedInstanceState) {
 			getFragmentManager().beginTransaction().replace(R.id.chart, new ChartFragment()).commit();
 		}
-		System.out.println("REPLACED");
 	}
 	
 	public SimpleStatisticsService getService() {
