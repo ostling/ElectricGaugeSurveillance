@@ -8,6 +8,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
@@ -15,6 +16,9 @@ import android.util.Log;
 public class SimpleStatisticsActivity extends Activity {
 	
 	private SimpleStatisticsService service;
+	private SharedPreferences sensorSettings = null;
+	private static String IP_ADDRESS;
+	private static int PORT;
 	
 	private ServiceConnection mConnection = new ServiceConnection() {
 		@Override
@@ -32,6 +36,17 @@ public class SimpleStatisticsActivity extends Activity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		
+		// Fetch preferences
+		sensorSettings = getSharedPreferences(getString(R.string.SENSOR_PREFS), 0);
+		
+		// TEMPORARY: Set ip and port
+		sensorSettings.edit().putString(getString(R.string.SENSOR_PREFS_IP_ADDRESS), "10.10.100.36").commit();
+		sensorSettings.edit().putInt(getString(R.string.SENSOR_PREFS_PORT), 4444).commit();
+		
+		IP_ADDRESS = sensorSettings.getString(getString(R.string.SENSOR_PREFS_IP_ADDRESS), null); // TODO : Handle null
+		PORT = sensorSettings.getInt(getString(R.string.SENSOR_PREFS_PORT), 4444); // TODO : Handle default port
+		
 		if (!isServiceRunning()) {
 			startService();
 		}
@@ -41,8 +56,8 @@ public class SimpleStatisticsActivity extends Activity {
 	
 	private void startService() {
 		Intent service = new Intent(SimpleStatisticsActivity.this, SimpleStatisticsService.class);
-		service.putExtra("IP_ADDRESS", "10.10.100.36");
-		service.putExtra("PORT", 4444);
+		service.putExtra("IP_ADDRESS", IP_ADDRESS);
+		service.putExtra("PORT", PORT);
 		startService(service);
 		Log.d("service", "Simple statistics service started");
 	}

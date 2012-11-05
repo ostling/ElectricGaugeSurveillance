@@ -32,8 +32,6 @@ public class SimpleStatisticsFragment extends ListFragment {
 	boolean timerIsRunning = false;
 	
 	private static int MAX_RETRYS;
-	private static String IP_ADDRESS;
-	private static int PORT;
 	private static int SOCKET_TIMEOUT;
 	
 	private static final int SENSOR_SAMPLE_TIME = 5000;
@@ -47,7 +45,6 @@ public class SimpleStatisticsFragment extends ListFragment {
 					new Thread(new Runnable() {
 						public void run() {
 							String[] from = { "name", "value" };
-							Log.d("SimpleStatistics", "requesting data SIMPLE");
 							int[] to = {android.R.id.text1, android.R.id.text2 };
 							adapter = new SimpleAdapter(getActivity(), getData(service),
 								android.R.layout.simple_list_item_2, from, to);
@@ -82,14 +79,9 @@ public class SimpleStatisticsFragment extends ListFragment {
 		// Fetch preferences
 		sensorSettings = getActivity().getSharedPreferences(getString(R.string.SENSOR_PREFS), 0);
 		
-		// TEMPORARY: Set ip and port
-		sensorSettings.edit().putString(getString(R.string.SENSOR_PREFS_IP_ADDRESS), "10.10.100.36").commit();
-		sensorSettings.edit().putInt(getString(R.string.SENSOR_PREFS_PORT), 4444).commit();
 		sensorSettings.edit().putInt(getString(R.string.SENSOR_PREFS_MAX_RETRYS), 3);
 		sensorSettings.edit().putInt(getString(R.string.SENSOR_PREFS_SOCKET_TIMEOUT), 20000);
 		
-		IP_ADDRESS = sensorSettings.getString(getString(R.string.SENSOR_PREFS_IP_ADDRESS), null); // TODO : Handle null
-		PORT = sensorSettings.getInt(getString(R.string.SENSOR_PREFS_PORT), 4444); // TODO : Handle default port
 		MAX_RETRYS = sensorSettings.getInt(getString(R.string.SENSOR_PREFS_MAX_RETRYS), 3);
 		SOCKET_TIMEOUT = sensorSettings.getInt(getString(R.string.SENSOR_PREFS_SOCKET_TIMEOUT), 20000);
 		
@@ -157,8 +149,6 @@ public class SimpleStatisticsFragment extends ListFragment {
 		}
 		return list;
 	}
-	
-	
 	
 	private HashMap<String, String> putData(String name, String value) {
 		HashMap<String, String> item = new HashMap<String, String>();

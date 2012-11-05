@@ -79,7 +79,6 @@ public class ChartFragment extends Fragment implements OnClickListener {
 							handler.post(new Runnable() {
 								public void run() {
 									addValue(tempValue);
-									System.out.println("added data CHART");
 								};
 							});
 						}
