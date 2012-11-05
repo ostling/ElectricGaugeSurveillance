@@ -2,6 +2,7 @@ package se.xdin.electricgaugesurveillance.fragments;
 
 import se.xdin.electricgaugesurveillance.SimpleStatisticsActivity;
 import se.xdin.electricgaugesurveillance.SimpleStatisticsGraphActivity;
+import se.xdin.electricgaugesurveillance.menu.SettingsMenuActivity;
 import android.app.ListFragment;
 import android.content.Intent;
 import android.os.Bundle;
@@ -31,7 +32,6 @@ public class MainViewListFragment extends ListFragment {
 	
 	@Override
 	public void onListItemClick(ListView l, View v, int position, long id) {
-		System.out.println("props listview: " + l + ", view: " + v + ", pos: " + position + ", id: " + id);
 		TextView textView = (TextView) v;
 		if (textView.getText().equals("Simple statistics")) {
 			Intent intent = new Intent(getActivity().getApplicationContext(),
@@ -40,8 +40,11 @@ public class MainViewListFragment extends ListFragment {
 		} else if (textView.getText().equals("Last week")) {
 			Intent intent = new Intent(getActivity().getApplicationContext(), SimpleStatisticsGraphActivity.class);
 			startActivity(intent);
+		}  else if (textView.getText().equals("Settings")) {
+			startActivity(new Intent(getActivity().getApplicationContext(), SettingsMenuActivity.class));
 		} else {
 			System.out.println("no match: " + textView.getText());
 		}
 	}
+	
 }

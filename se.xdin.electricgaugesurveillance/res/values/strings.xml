@@ -18,5 +18,8 @@
     <string name="SENSOR_PREFS_MAX_RETRYS">SensorPrefsMaxRetrys</string>
     <string name="SENSOR_PREFS_SOCKET_TIMEOUT">SensorPrefsSocketTimeout</string>
     <string name="service_name">Simpel Statistics Service</string>
+    <string name="SETTINGS_IP_ADDRESS">IP Address</string>
+    <string name="SETTINGS_PORT">Port</string>
+    <string name="SETTINGS_SAVE">Save settings</string>
 
 </resources>
