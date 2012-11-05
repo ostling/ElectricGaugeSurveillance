@@ -28,6 +28,7 @@ public class SimpleStatisticsFragment extends ListFragment {
 	private SimpleAdapter adapter;
 	ArrayList<Map<String, String>> list;
 	Thread thread;
+	boolean timerIsRunning = false;
 	
 	private static int MAX_RETRYS;
 	private static String IP_ADDRESS;
@@ -100,7 +101,21 @@ public class SimpleStatisticsFragment extends ListFragment {
 				android.R.layout.simple_list_item_1, values);
 		setListAdapter(adapter);
 		
-		mTimer.start();
+		startTimer();
+	}
+	
+	private void startTimer() {
+		if (!timerIsRunning) {
+			mTimer.start();
+			timerIsRunning = true;
+		}
+	}
+	
+	private void stopTimer() {
+		if (timerIsRunning) {
+			mTimer.cancel();
+			timerIsRunning = false;
+		}
 	}
 	
 	@Override
@@ -115,13 +130,13 @@ public class SimpleStatisticsFragment extends ListFragment {
 	
 	@Override
 	public void onPause() {
-		mTimer.cancel();
+		stopTimer();
 		super.onPause();
 	}
 	
 	@Override
 	public void onResume() {
-		mTimer.start();
+		startTimer();
 		super.onResume();
 	}
 	

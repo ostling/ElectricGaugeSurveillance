@@ -30,8 +30,8 @@ public class SimpleStatisticsActivity extends Activity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.simple_statistics);
 		doBindService();
+		setContentView(R.layout.simple_statistics);
 	}
 	
 	private void doBindService() {

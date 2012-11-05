@@ -75,11 +75,11 @@ public class ChartFragment extends Fragment implements OnClickListener {
 				if (service.isConnected) {
 					new Thread(new Runnable() {
 						public void run() {
-							System.out.println("requesting data CHART");
 							final double tempValue = getData(service);
 							handler.post(new Runnable() {
 								public void run() {
 									addValue(tempValue);
+									System.out.println("added data CHART");
 								};
 							});
 						}
@@ -177,12 +177,10 @@ public class ChartFragment extends Fragment implements OnClickListener {
 		view.addView(mChartView, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 		return view;
 	}
-
-
+	
 	@Override
 	public void onActivityCreated(final Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
-		System.out.println("cre start");
 		mViewZoomIn = getActivity().findViewById(R.id.zoom_in);
 		mViewZoomOut = getActivity().findViewById(R.id.zoom_out);
 		mViewZoomReset = getActivity().findViewById(R.id.zoom_reset);
@@ -202,28 +200,53 @@ public class ChartFragment extends Fragment implements OnClickListener {
 		
 		mRenderer.addSeriesRenderer(renderer);
 		addValue(0.0);
+//		startTimer();
+		System.out.println("testgetting");
+		testget();
+	}
+	
+	private void testget() {
+		final SimpleStatisticsService service = getService();
+		if (service != null) {
+			if (service.isConnected) {
+				new Thread(new Runnable() {
+					public void run() {
+						final double tempValue = getData(service);
+						handler.post(new Runnable() {
+							public void run() {
+								addValue(tempValue);
+								System.out.println("added data CHART");
+							};
+						});
+					}
+				}).start();
+			}
+		}
+	}
+	
+	private void startTimer() {
 		if (!timerIsRunning) {
 			mTimer.start();
 			timerIsRunning = true;
 		}
-		System.out.println("cre end");
 	}
 	
-	@Override
-	public void onPause() {
+	private void stopTimer() {
 		if (timerIsRunning) {
 			mTimer.cancel();
 			timerIsRunning = false;
 		}
+	}
+	
+	@Override
+	public void onPause() {
+		stopTimer();
 		super.onPause();
 	}
 	
 	@Override
 	public void onResume() {
-		if (!timerIsRunning) {
-			mTimer.start();
-			timerIsRunning = true;
-		}
+		startTimer();
 		super.onResume();
 	}
 
@@ -233,20 +256,16 @@ public class ChartFragment extends Fragment implements OnClickListener {
 
 		final Date now = new Date();
 		final long time = now.getTime();
-
+		
 		series.add(now, value);
-
 		scrollGraph(time);
 		mChartView.repaint();
-		System.out.println("add value finish");
 	}
 
 	private void scrollGraph(final long time) {
-		System.out.println("scoll start");
 		final double[] limits = new double[] { time - TEN_SEC * mZoomLevel, time + TWO_SEC * mZoomLevel, mYAxisMin - mYAxisPadding,
 				mYAxisMax + mYAxisPadding };
 		mRenderer.setRange(limits);
-		System.out.println("scroll finish");
 	}
 
 	public void onClick(final View v) {

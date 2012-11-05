@@ -78,18 +78,18 @@ public class SimpleStatisticsService extends Service {
 		OutputStream output = null;
 		String string = null;
 	    try {
+	    	System.out.println("get simple sensor data");
 	    	input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             output = socket.getOutputStream();
             Calendar cal = Calendar.getInstance();
             cal.add(Calendar.MILLISECOND, SENSOR_TIME_OUT);
             
             output.write(SIMPLE_SENSOR_DATA);
+            System.out.println("sent request");
             
-            while (!input.ready() && Calendar.getInstance().before(cal) && string == null) {
-            	try { Thread.sleep(SENSOR_SAMPLE_TIME); } catch (Exception e) {}
-            }
             if (!socket.isClosed())
             	string = input.readLine();
+            System.out.println("passed read");
        
 	    } catch (UnknownHostException e) {
 	            e.printStackTrace();

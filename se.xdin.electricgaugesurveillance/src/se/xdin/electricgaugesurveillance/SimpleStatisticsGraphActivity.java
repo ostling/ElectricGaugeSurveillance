@@ -33,14 +33,21 @@ public class SimpleStatisticsGraphActivity extends Activity {
 	@Override
 	public void onCreate(final Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.simple_statistics_chart);
 		doBindService();
+		setContentView(R.layout.simple_statistics_chart);
 	}
 	
 	private void doBindService() {
 		Intent service = new Intent(SimpleStatisticsGraphActivity.this, SimpleStatisticsService.class);
 		bindService(service, mConnection, Context.BIND_AUTO_CREATE);
 	}
+	
+	@Override
+	public void onDestroy() {
+		unbindService(mConnection);
+		super.onDestroy();
+	}
+
 
 	@Override
 	protected void onPostCreate(final Bundle savedInstanceState) {
@@ -48,6 +55,7 @@ public class SimpleStatisticsGraphActivity extends Activity {
 		if (null == savedInstanceState) {
 			getFragmentManager().beginTransaction().replace(R.id.chart, new ChartFragment()).commit();
 		}
+		System.out.println("REPLACED");
 	}
 	
 	public SimpleStatisticsService getService() {
