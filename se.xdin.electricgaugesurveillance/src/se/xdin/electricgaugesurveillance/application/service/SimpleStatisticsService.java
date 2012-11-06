@@ -36,7 +36,6 @@ public class SimpleStatisticsService extends Service {
 	
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-		Uri data = intent.getData();
 		final String ipAdress = intent.getStringExtra("IP_ADDRESS");
 		final int port = intent.getIntExtra("PORT", 4444);
 		
@@ -78,8 +77,6 @@ public class SimpleStatisticsService extends Service {
 	    try {
 	    	input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             output = socket.getOutputStream();
-            Calendar cal = Calendar.getInstance();
-            cal.add(Calendar.MILLISECOND, SENSOR_TIME_OUT);
             
             output.write(SIMPLE_SENSOR_DATA);
             

@@ -170,10 +170,11 @@ public class ChartFragment extends Fragment implements OnClickListener {
 			mRenderer.setYLabels(15);
 		}
 
-		final LinearLayout view = (LinearLayout) inflater.inflate(R.layout.simple_chart_fragment, container, false);
+		final LinearLayout view = (LinearLayout) inflater.inflate(R.layout.simple_chart_fragment, (LinearLayout) getActivity().findViewById(R.id.chart), false);
+//		LinearLayout view = (LinearLayout) getActivity().findViewById(R.id.chart);
 		mChartView = ChartFactory.getTimeChartView(getActivity(), mDataset, mRenderer, "APAN");
 		mChartView.addZoomListener(mZoomListener, true, false);
-		view.addView(mChartView, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+		view.addView(mChartView, new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT));
 		return view;
 	}
 	
@@ -199,6 +200,7 @@ public class ChartFragment extends Fragment implements OnClickListener {
 		
 		mRenderer.addSeriesRenderer(renderer);
 		addValue(0.0);
+		startTimer();
 	}
 	
 	private void startTimer() {

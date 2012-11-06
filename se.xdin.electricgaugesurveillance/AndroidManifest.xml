@@ -30,6 +30,7 @@
         <activity 
             android:name="SimpleStatisticsGraphActivity"
             android:label="@string/title_activity_simple_statistics_graph"></activity>
+        
         <activity android:name="org.achartengine.GraphicalActivity"></activity>
         <activity android:name=".menu.SettingsMenuActivity"></activity>
         

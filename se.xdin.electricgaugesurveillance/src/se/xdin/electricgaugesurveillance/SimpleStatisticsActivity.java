@@ -41,7 +41,7 @@ public class SimpleStatisticsActivity extends Activity {
 		sensorSettings = getSharedPreferences(getString(R.string.SENSOR_PREFS), 0);
 		
 		// TEMPORARY: Set ip and port
-		sensorSettings.edit().putString(getString(R.string.SENSOR_PREFS_IP_ADDRESS), "10.10.100.36").commit();
+		sensorSettings.edit().putString(getString(R.string.SENSOR_PREFS_IP_ADDRESS), "10.10.100.32").commit();
 		sensorSettings.edit().putInt(getString(R.string.SENSOR_PREFS_PORT), 4444).commit();
 		
 		IP_ADDRESS = sensorSettings.getString(getString(R.string.SENSOR_PREFS_IP_ADDRESS), null); // TODO : Handle null
