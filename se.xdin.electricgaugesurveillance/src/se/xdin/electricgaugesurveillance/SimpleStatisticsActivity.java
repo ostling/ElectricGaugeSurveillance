@@ -17,8 +17,8 @@ public class SimpleStatisticsActivity extends Activity {
 	
 	private SimpleStatisticsService service;
 	private SharedPreferences sensorSettings = null;
-	private static String IP_ADDRESS;
-	private static int PORT;
+	private static String IP_ADDRESS = "10.10.100.32";
+	private static int PORT = 4444;
 	
 	private ServiceConnection mConnection = new ServiceConnection() {
 		@Override
@@ -40,9 +40,14 @@ public class SimpleStatisticsActivity extends Activity {
 		// Fetch preferences
 		sensorSettings = getSharedPreferences(getString(R.string.SENSOR_PREFS), 0);
 		
-		// TEMPORARY: Set ip and port
-		sensorSettings.edit().putString(getString(R.string.SENSOR_PREFS_IP_ADDRESS), "10.10.100.32").commit();
-		sensorSettings.edit().putInt(getString(R.string.SENSOR_PREFS_PORT), 4444).commit();
+		if (sensorSettings.getString(getString(R.string.SENSOR_PREFS_IP_ADDRESS), "unset").equals("unset")) {
+			sensorSettings.edit().putString(getString(R.string.SENSOR_PREFS_IP_ADDRESS), IP_ADDRESS).commit();
+			Log.d("Sensor", "Sensor IP Address not set, using default: " + IP_ADDRESS);
+		}
+		if (sensorSettings.getInt(getString(R.string.SENSOR_PREFS_PORT), Integer.MAX_VALUE) == Integer.MAX_VALUE) {
+			sensorSettings.edit().putInt(getString(R.string.SENSOR_PREFS_PORT), PORT).commit();
+			Log.d("Sensor", "Sensor Port not set, using default: " + PORT);
+		}
 		
 		IP_ADDRESS = sensorSettings.getString(getString(R.string.SENSOR_PREFS_IP_ADDRESS), null); // TODO : Handle null
 		PORT = sensorSettings.getInt(getString(R.string.SENSOR_PREFS_PORT), 4444); // TODO : Handle default port
